@@ -1,13 +1,11 @@
 from datetime import datetime, timedelta
 from typing import Dict, Any
-import hashlib
 import json
+import uuid
 
 def generate_transaction_id() -> str:
     """Generate unique transaction ID"""
-    timestamp = datetime.utcnow().isoformat()
-    hash_object = hashlib.md5(timestamp.encode())
-    return f"TXN-{hash_object.hexdigest()[:12].upper()}"
+    return f"TXN-{uuid.uuid4().hex[:12].upper()}"
 
 def calculate_time_difference(start: datetime, end: datetime) -> Dict[str, Any]:
     """Calculate time difference"""
