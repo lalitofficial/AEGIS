@@ -1,6 +1,7 @@
 from typing import Dict, List, Tuple
 from sqlalchemy.orm import Session
 from app.models.fraud import FraudAlert
+from app.models.transaction import Transaction
 from app.ml_models.fraud_detector import fraud_detector
 from app.schemas.fraud import FraudAlertCreate
 from app.utils.logger import logger
@@ -40,6 +41,30 @@ class FraudDetectionService:
         if risk_score >= 90: status = "Blocked"
         elif risk_score >= 75: status = "Under Investigation"
         else: status = "Pending Review"
+
+        transaction = db.query(Transaction).filter(
+            Transaction.transaction_id == transaction_data['transaction_id']
+        ).first()
+        if not transaction:
+            transaction = Transaction(
+                transaction_id=transaction_data['transaction_id'],
+                customer_id=transaction_data['customer_id'],
+                amount=transaction_data['amount'],
+                currency=transaction_data.get('currency', 'INR'),
+                merchant_id=transaction_data.get('merchant_id', 'unknown'),
+                merchant_category=transaction_data.get('merchant_category'),
+                payment_method=transaction_data.get('payment_method', 'unknown'),
+                ip_address=transaction_data.get('ip_address'),
+                device_id=transaction_data.get('device_id'),
+                location=transaction_data.get('location'),
+                status=transaction_data.get('status', 'pending'),
+                features=transaction_data.get('features'),
+                fraud_probability=confidence
+            )
+            db.add(transaction)
+            db.flush()
+        else:
+            transaction.fraud_probability = confidence
             
         fraud_alert_data = FraudAlertCreate(
             transaction_id=transaction_data['transaction_id'],
