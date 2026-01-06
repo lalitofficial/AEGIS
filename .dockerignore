@@ -1,0 +1,25 @@
+.git
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+.env
+.env.*
+*.db
+
+# API artifacts
+api/logs/
+api/.pytest_cache/
+
+# Frontend artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+frontend/*.log

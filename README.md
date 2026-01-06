@@ -1,18 +1,18 @@
 # Aegis
 
-Fraud detection platform with a FastAPI backend and a React/Vite frontend.
+Fraud detection platform with a FastAPI API and a React/Vite frontend.
 
 ## Repo structure
-- `backend/`: FastAPI API, ML models, database layer, and tests.
+- `api/`: FastAPI API, ML models, database layer, and tests.
 - `frontend/`: React/Vite frontend for dashboards and monitoring.
 
 ## Quick start
 
-### Backend
-1. `cd backend`
+### API
+1. `cd api`
 2. `cp .env.example .env`
 3. `python -m venv .venv && source .venv/bin/activate`
-4. `pip install -r requirements.txt`
+4. `pip install -r ../requirements.txt`
 5. `uvicorn app.main:app --reload`
 
 ### Frontend
@@ -20,9 +20,18 @@ Fraud detection platform with a FastAPI backend and a React/Vite frontend.
 2. `npm install`
 3. `npm run dev`
 
+## Docker (recommended)
+1. `docker compose up --build`
+2. Frontend: `http://localhost:3000`
+3. API: `http://localhost:8000`
+
+## Docker (dev workflow)
+1. `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
+2. Frontend (Vite dev): `http://localhost:3000`
+3. API (reload): `http://localhost:8000`
+
 ## Configuration
-Backend settings live in `backend/.env` (see `backend/.env.example` for defaults).
+API settings live in `api/.env` (see `api/.env.example` for defaults).
 
 ## Notes
-- This repo is meant to be a single Git repository with `backend/` and `frontend/` as subfolders.
-# AEGIS
+- This repo is meant to be a single Git repository with `api/` and `frontend/` as subfolders.

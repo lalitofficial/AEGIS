@@ -11,12 +11,12 @@ const BackendTest = () => {
         const data = await dashboardService.getMetrics();
         if (data) {
           setMetrics(data);
-          setStatus('✅ Connected to AEGIS Backend');
+          setStatus('✅ Connected to AEGIS API');
         } else {
-          setStatus('❌ Backend connected but returned no data');
+          setStatus('❌ API connected but returned no data');
         }
       } catch (err) {
-        setStatus('❌ Failed to connect (Is backend running on port 8000?)');
+        setStatus('❌ Failed to connect (Is API running on port 8000?)');
       }
     };
 

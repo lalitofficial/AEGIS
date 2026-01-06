@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// The URL of your running Python backend
-const API_URL = 'http://localhost:8000/api/v1';
+// The URL of your running API (proxied in Docker/Nginx)
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 // Create a configured instance of axios
 const api = axios.create({
