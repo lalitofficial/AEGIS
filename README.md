@@ -1,4 +1,4 @@
-# Aegis
+# Aegis : AI-Driven Fraud detection platform
 
 <p align="center">
   <img src="assets/aegis-banner.svg" alt="AEGIS banner" width="100%" />
