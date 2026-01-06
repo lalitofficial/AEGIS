@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="260" viewBox="0 0 1200 260" fill="none">
+  <defs>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="260" rx="16" fill="url(#card)"/>
+
+  <g opacity="0.2" stroke="#334155" stroke-width="1">
+    <line x1="60" y1="40" x2="1140" y2="40"/>
+    <line x1="60" y1="90" x2="1140" y2="90"/>
+    <line x1="60" y1="140" x2="1140" y2="140"/>
+    <line x1="60" y1="190" x2="1140" y2="190"/>
+  </g>
+
+  <g>
+    <rect x="90" y="150" width="22" height="50" rx="6" fill="#60a5fa"/>
+    <rect x="130" y="120" width="22" height="80" rx="6" fill="#22d3ee"/>
+    <rect x="170" y="110" width="22" height="90" rx="6" fill="#34d399"/>
+    <rect x="210" y="80" width="22" height="120" rx="6" fill="#fbbf24"/>
+    <rect x="250" y="100" width="22" height="100" rx="6" fill="#f87171"/>
+  </g>
+
+  <g>
+    <polyline points="420,180 500,160 580,170 660,140 740,150 820,120 900,130 980,110 1060,120"
+      fill="none" stroke="#22d3ee" stroke-width="3"/>
+    <polyline points="420,190 500,185 580,175 660,165 740,160 820,150 900,140 980,135 1060,130"
+      fill="none" stroke="#60a5fa" stroke-width="3"/>
+    <circle cx="420" cy="180" r="4" fill="#22d3ee"/>
+    <circle cx="660" cy="140" r="4" fill="#22d3ee"/>
+    <circle cx="820" cy="120" r="4" fill="#22d3ee"/>
+    <circle cx="980" cy="110" r="4" fill="#22d3ee"/>
+  </g>
+
+  <g>
+    <rect x="420" y="60" width="170" height="36" rx="12" fill="#0f172a" stroke="#1f2937"/>
+    <text x="505" y="83" fill="#e2e8f0" font-size="14" font-weight="600" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">Fraud Rate Trend</text>
+    <rect x="640" y="60" width="170" height="36" rx="12" fill="#0f172a" stroke="#1f2937"/>
+    <text x="725" y="83" fill="#e2e8f0" font-size="14" font-weight="600" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">Risk Velocity</text>
+    <rect x="860" y="60" width="170" height="36" rx="12" fill="#0f172a" stroke="#1f2937"/>
+    <text x="945" y="83" fill="#e2e8f0" font-size="14" font-weight="600" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">Alerts Volume</text>
+  </g>
+</svg>

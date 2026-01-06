@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#0e1b2a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(880 80) rotate(135) scale(260 220)">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#1f2937" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="320" rx="18" fill="url(#bg)"/>
+  <rect width="1200" height="320" rx="18" fill="url(#grid)" opacity="0.55"/>
+  <rect width="1200" height="320" rx="18" fill="url(#glow)"/>
+
+  <g opacity="0.6">
+    <circle cx="140" cy="90" r="4" fill="#93c5fd"/>
+    <circle cx="190" cy="140" r="4" fill="#a7f3d0"/>
+    <circle cx="250" cy="80" r="4" fill="#fcd34d"/>
+    <circle cx="1030" cy="240" r="4" fill="#93c5fd"/>
+    <circle cx="980" cy="200" r="4" fill="#a7f3d0"/>
+  </g>
+
+  <g>
+    <rect x="70" y="70" width="8" height="180" rx="4" fill="#22d3ee" opacity="0.65"/>
+    <rect x="92" y="110" width="8" height="140" rx="4" fill="#60a5fa" opacity="0.8"/>
+    <rect x="114" y="150" width="8" height="100" rx="4" fill="#34d399" opacity="0.8"/>
+  </g>
+
+  <text x="170" y="155" fill="#e2e8f0" font-size="64" font-weight="700" font-family="Segoe UI, Arial, sans-serif">AEGIS</text>
+  <text x="170" y="190" fill="#94a3b8" font-size="18" font-weight="500" font-family="Segoe UI, Arial, sans-serif">
+    AI-driven fraud detection and risk intelligence
+  </text>
+
+  <g>
+    <rect x="170" y="215" width="120" height="26" rx="13" fill="#1f2937" stroke="#334155"/>
+    <text x="230" y="233" fill="#cbd5f5" font-size="12" font-weight="600" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">REAL-TIME</text>
+
+    <rect x="300" y="215" width="120" height="26" rx="13" fill="#1f2937" stroke="#334155"/>
+    <text x="360" y="233" fill="#cbd5f5" font-size="12" font-weight="600" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">RISK SCORES</text>
+
+    <rect x="430" y="215" width="140" height="26" rx="13" fill="#1f2937" stroke="#334155"/>
+    <text x="500" y="233" fill="#cbd5f5" font-size="12" font-weight="600" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">GRAPH SIGNALS</text>
+  </g>
+
+  <g opacity="0.9">
+    <path d="M820 240 C860 210, 910 210, 960 230" stroke="#22d3ee" stroke-width="3" fill="none"/>
+    <path d="M820 220 C860 190, 910 190, 970 200" stroke="#60a5fa" stroke-width="3" fill="none"/>
+    <circle cx="820" cy="220" r="4" fill="#22d3ee"/>
+    <circle cx="960" cy="230" r="4" fill="#22d3ee"/>
+    <circle cx="820" cy="200" r="4" fill="#60a5fa"/>
+    <circle cx="970" cy="200" r="4" fill="#60a5fa"/>
+  </g>
+</svg>

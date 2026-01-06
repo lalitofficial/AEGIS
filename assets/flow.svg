@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="240" viewBox="0 0 1200 240" fill="none">
+  <defs>
+    <linearGradient id="bg-flow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="240" rx="16" fill="url(#bg-flow)"/>
+
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#e2e8f0">
+    <rect x="50" y="60" width="160" height="80" rx="12" fill="#111827" stroke="#1f2937"/>
+    <text x="130" y="105" text-anchor="middle">Transactions</text>
+
+    <rect x="250" y="60" width="160" height="80" rx="12" fill="#111827" stroke="#1f2937"/>
+    <text x="330" y="105" text-anchor="middle">Feature Extraction</text>
+
+    <rect x="450" y="40" width="160" height="60" rx="12" fill="#111827" stroke="#1f2937"/>
+    <text x="530" y="75" text-anchor="middle">Fraud Detector</text>
+
+    <rect x="450" y="120" width="160" height="60" rx="12" fill="#111827" stroke="#1f2937"/>
+    <text x="530" y="155" text-anchor="middle">Risk Scorer</text>
+
+    <rect x="650" y="60" width="160" height="80" rx="12" fill="#111827" stroke="#1f2937"/>
+    <text x="730" y="105" text-anchor="middle">Graph Signals</text>
+
+    <rect x="850" y="60" width="160" height="80" rx="12" fill="#111827" stroke="#1f2937"/>
+    <text x="930" y="105" text-anchor="middle">Alerts + Cases</text>
+
+    <rect x="1050" y="60" width="120" height="80" rx="12" fill="#111827" stroke="#1f2937"/>
+    <text x="1110" y="105" text-anchor="middle">Dashboard</text>
+  </g>
+
+  <g stroke="#22d3ee" stroke-width="2">
+    <path d="M210 100 H250"/>
+    <path d="M410 100 H450"/>
+    <path d="M610 70 H650"/>
+    <path d="M610 150 H650"/>
+    <path d="M810 100 H850"/>
+    <path d="M1010 100 H1050"/>
+  </g>
+
+  <g fill="#22d3ee">
+    <circle cx="210" cy="100" r="3"/>
+    <circle cx="410" cy="100" r="3"/>
+    <circle cx="610" cy="70" r="3"/>
+    <circle cx="610" cy="150" r="3"/>
+    <circle cx="810" cy="100" r="3"/>
+    <circle cx="1010" cy="100" r="3"/>
+  </g>
+
+  <text x="50" y="30" fill="#94a3b8" font-family="Segoe UI, Arial, sans-serif" font-size="12">
+    ML signal pipeline (streaming + batch)
+  </text>
+</svg>
