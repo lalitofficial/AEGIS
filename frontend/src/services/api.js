@@ -3,11 +3,14 @@ import axios from 'axios';
 // The URL of your running API (proxied in Docker/Nginx)
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
+const apiKey = import.meta.env.VITE_API_KEY;
+
 // Create a configured instance of axios
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    ...(apiKey ? { 'X-API-Key': apiKey } : {}),
   },
 });
 

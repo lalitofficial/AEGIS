@@ -109,8 +109,9 @@ flowchart LR
 
 ## Configuration
 - API settings live in `api/.env` (see `api/.env.example`).
-- Key variables: `DATABASE_URL`, `SECRET_KEY`, `MODEL_PATH`, `FRAUD_DETECTION_THRESHOLD`.
+- Key variables: `DATABASE_URL`, `SECRET_KEY`, `API_KEY`, `MODEL_PATH`, `FRAUD_DETECTION_THRESHOLD`.
 - Frontend can override the API base URL with `VITE_API_URL` (defaults to `/api/v1`).
+- For local dev, set `VITE_API_KEY` to match `API_KEY`.
 
 ## API surface
 - `GET /health`
