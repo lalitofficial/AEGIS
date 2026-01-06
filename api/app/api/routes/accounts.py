@@ -36,36 +36,7 @@ async def get_monitored_accounts(db: Session = Depends(get_db)):
                 
         return list(account_summary.values())
     except Exception as e:
-        # Return mock data if error
-        return [
-            {
-                "name": "Personal Checking",
-                "count": 12450,
-                "clean": 12380,
-                "flagged": 70,
-                "status": "healthy",
-                "lastScan": "2 hours ago",
-                "transactionVolume": "2.3M"
-            },
-            {
-                "name": "Business Accounts",
-                "count": 3200,
-                "clean": 3150,
-                "flagged": 50,
-                "status": "warning",
-                "lastScan": "1 hour ago",
-                "transactionVolume": "8.7M"
-            },
-            {
-                "name": "Credit Card Accounts",
-                "count": 8500,
-                "clean": 8420,
-                "flagged": 80,
-                "status": "warning",
-                "lastScan": "30 min ago",
-                "transactionVolume": "5.1M"
-            }
-        ]
+        raise HTTPException(status_code=500, detail="Failed to fetch monitored accounts")
 
 @router.get("/{account_id}")
 async def get_account_details(

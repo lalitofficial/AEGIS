@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
-from app.schemas.fraud import FraudAlertResponse, FraudAlertCreate
+from app.schemas.fraud import FraudAlertResponse, FraudAlertCreate, FraudAnalysisRequest, FraudAlertStatus
 from app.services.fraud_detection import FraudDetectionService
 from app.utils.logger import logger
 
@@ -38,18 +38,19 @@ async def get_fraud_alert(
 
 @router.post("/analyze", response_model=dict)
 async def analyze_transaction(
-    transaction_data: dict,
+    transaction_data: FraudAnalysisRequest,
     db: Session = Depends(get_db)):
     """Analyze a transaction for fraud"""
     try:
+        transaction_payload = transaction_data.dict()
         is_fraud, confidence, risk_indicators = FraudDetectionService.analyze_transaction(
-            transaction_data, db
+            transaction_payload, db
         )
         
         # Create fraud alert if fraud detected
         if is_fraud:
             alert = FraudDetectionService.create_fraud_alert(
-                transaction_data,
+                transaction_payload,
                 is_fraud,
                 confidence,
                 risk_indicators,
@@ -75,7 +76,7 @@ async def analyze_transaction(
 @router.patch("/alerts/{alert_id}/status")
 async def update_alert_status(
     alert_id: int,
-    status: str,
+    status: FraudAlertStatus = Query(...),
     db: Session = Depends(get_db)):
     """Update fraud alert status"""
     alert = FraudDetectionService.update_alert_status(alert_id, status, db)

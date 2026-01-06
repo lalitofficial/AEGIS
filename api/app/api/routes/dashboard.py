@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
@@ -36,12 +36,10 @@ async def get_dashboard_metrics(db: Session = Depends(get_db)):
         }
     except Exception as e:
         logger.error(f"Error fetching dashboard metrics: {e}")
-        return {
-            "fraudDetectionRate": 98.7,
-            "suspiciousTransactions": 1247,
-            "confirmedFrauds": 148,
-            "falsePositiveRate": 2.3
-        }
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch dashboard metrics"
+        )
 
 @router.get("/fraud-trends")
 async def get_fraud_trends(db: Session = Depends(get_db)):
@@ -80,16 +78,10 @@ async def get_fraud_trends(db: Session = Depends(get_db)):
         return time_ranges
     except Exception as e:
         logger.error(f"Error fetching fraud trends: {e}")
-        # Return mock data
-        return [
-            {"time": "00:00", "total": 45, "blocked": 42, "cardFraud": 15, "accountTakeover": 12, "identityTheft": 8, "paymentFraud": 7},
-            {"time": "04:00", "total": 28, "blocked": 26, "cardFraud": 10, "accountTakeover": 8, "identityTheft": 5, "paymentFraud": 3},
-            {"time": "08:00", "total": 62, "blocked": 58, "cardFraud": 22, "accountTakeover": 18, "identityTheft": 10, "paymentFraud": 8},
-            {"time": "12:00", "total": 89, "blocked": 84, "cardFraud": 32, "accountTakeover": 25, "identityTheft": 15, "paymentFraud": 12},
-            {"time": "16:00", "total": 105, "blocked": 98, "cardFraud": 38, "accountTakeover": 30, "identityTheft": 18, "paymentFraud": 14},
-            {"time": "20:00", "total": 71, "blocked": 67, "cardFraud": 25, "accountTakeover": 20, "identityTheft": 12, "paymentFraud": 10},
-            {"time": "Now", "total": 52, "blocked": 49, "cardFraud": 18, "accountTakeover": 15, "identityTheft": 9, "paymentFraud": 7}
-        ]
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch fraud trends"
+        )
 
 @router.get("/fraud-type-distribution")
 async def get_fraud_type_distribution(db: Session = Depends(get_db)):
@@ -124,13 +116,10 @@ async def get_fraud_type_distribution(db: Session = Depends(get_db)):
         return distribution
     except Exception as e:
         logger.error(f"Error fetching fraud type distribution: {e}")
-        return [
-            {"type": "Card Not Present", "count": 42, "percentage": 42, "color": "#ef4444"},
-            {"type": "Account Takeover", "count": 28, "percentage": 28, "color": "#f97316"},
-            {"type": "Friendly Fraud", "count": 15, "percentage": 15, "color": "#eab308"},
-            {"type": "Identity Theft", "count": 10, "percentage": 10, "color": "#8b5cf6"},
-            {"type": "Payment Fraud", "count": 5, "percentage": 5, "color": "#06b6d4"}
-        ]
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch fraud type distribution"
+        )
 
 @router.get("/detection-posture")
 async def get_detection_posture(db: Session = Depends(get_db)):
