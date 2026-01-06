@@ -48,9 +48,7 @@ class GraphAnalysisService:
         fraud_rings = graph_analyzer.detect_fraud_rings(G)
         
         # Calculate node risks
-        node_risks = {}
-        for node in G.nodes():
-            node_risks[node] = graph_analyzer.calculate_node_risk(G, node)
+        node_risks = graph_analyzer.calculate_node_risks(G)
             
         # Store graph in database
         GraphAnalysisService._store_graph(G, node_risks, db)

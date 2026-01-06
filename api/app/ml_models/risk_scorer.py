@@ -1,11 +1,20 @@
 import numpy as np
-from typing import Dict, List
+from typing import Dict, List, Union
+import re
 from app.config import settings
 from app.utils.logger import logger
 
 class RiskScorer:
     """Calculate risk scores for customers"""
     
+    def _normalize_account_age_days(self, value: Union[int, float, str]) -> float:
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            match = re.search(r"\d+(\.\d+)?", value)
+            return float(match.group(0)) if match else 0.0
+        return 0.0
+
     def __init__(self):
         self.risk_weights = {
             'failed_logins': 15,
@@ -31,7 +40,8 @@ class RiskScorer:
                 
                 if factor == 'account_age':
                     # Account age in days (older is safer)
-                    age_years = value / 365
+                    age_days = self._normalize_account_age_days(value)
+                    age_years = age_days / 365
                     score += weight * min(age_years, 5) / 5
                 else:
                     # Boolean or count factors
@@ -72,7 +82,10 @@ class RiskScorer:
         if customer_data.get('vpn_usage', False):
             risk_factors.append('VPN usage')
             
-        if customer_data.get('account_age', 365) < 30:
+        account_age_days = self._normalize_account_age_days(
+            customer_data.get('account_age', 365)
+        )
+        if account_age_days < 30:
             risk_factors.append('New account')
             
         return risk_factors

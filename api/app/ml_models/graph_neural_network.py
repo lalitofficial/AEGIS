@@ -111,5 +111,30 @@ class GraphAnalyzer:
         
         return risk
 
+    def calculate_node_risks(self, G: nx.Graph) -> Dict[str, float]:
+        """Calculate risk scores for all nodes efficiently"""
+        if G.number_of_nodes() == 0:
+            return {}
+
+        try:
+            betweenness = nx.betweenness_centrality(G)
+            closeness = nx.closeness_centrality(G)
+        except Exception:
+            betweenness = {node: 0 for node in G.nodes()}
+            closeness = {node: 0 for node in G.nodes()}
+
+        risks = {}
+        for node in G.nodes():
+            degree = G.degree(node)
+            clustering = nx.clustering(G, node)
+            risk = (
+                0.3 * min(degree / 10, 1.0) +
+                0.2 * clustering +
+                0.25 * betweenness.get(node, 0) +
+                0.25 * closeness.get(node, 0)
+            )
+            risks[node] = risk
+        return risks
+
 # Global instance
 graph_analyzer = GraphAnalyzer()
