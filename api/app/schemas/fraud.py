@@ -1,6 +1,12 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from enum import Enum
+
+class FraudAlertStatus(str, Enum):
+    blocked = "Blocked"
+    under_investigation = "Under Investigation"
+    pending_review = "Pending Review"
 
 class FraudAlertBase(BaseModel):
     transaction_id: str
@@ -58,3 +64,22 @@ class GraphEdgeSchema(BaseModel):
 class GraphDataResponse(BaseModel):
     nodes: List[GraphNodeSchema]
     edges: List[GraphEdgeSchema]
+
+class FraudAnalysisRequest(BaseModel):
+    transaction_id: str
+    customer_id: str
+    amount: float = Field(gt=0)
+    currency: str = "INR"
+    merchant_id: str
+    merchant_category: Optional[str] = None
+    payment_method: str
+    ip_address: Optional[str] = None
+    device_id: Optional[str] = None
+    location: Optional[Dict[str, Any]] = None
+    features: Optional[Dict[str, Any]] = None
+    status: Optional[str] = None
+    fraud_type: Optional[str] = None
+    customer_name: Optional[str] = None
+
+    class Config:
+        extra = "allow"
