@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+SQLAlchemy
+loguru
+numpy
+pandas
+scikit-learn
+joblib
+torch
+networkx
