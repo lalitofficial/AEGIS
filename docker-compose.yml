@@ -20,6 +20,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/aegis_db
       DATABASE_ECHO: "False"
       SECRET_KEY: change-me
+      API_KEY: dev-key
       LOG_LEVEL: INFO
     ports:
       - "8000:8000"
@@ -30,6 +31,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+        VITE_API_KEY: ${VITE_API_KEY:-dev-key}
     ports:
       - "3000:80"
     depends_on:

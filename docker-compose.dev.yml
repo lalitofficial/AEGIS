@@ -9,6 +9,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/aegis_db
       DATABASE_ECHO: "False"
       SECRET_KEY: change-me
+      API_KEY: dev-key
       LOG_LEVEL: INFO
 
   frontend:
@@ -19,4 +20,6 @@ services:
       - /app/node_modules
     ports:
       - "3000:3000"
+    environment:
+      VITE_API_KEY: dev-key
     command: npm run dev -- --host 0.0.0.0 --port 3000
