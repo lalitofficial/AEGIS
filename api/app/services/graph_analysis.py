@@ -107,7 +107,7 @@ class GraphAnalysisService:
                     group=group,
                     size=size,
                     title=f"Risk: {risk:.2f}",
-                    metadata={'node_type': node_type, 'risk_score': risk}
+                    meta_data={'node_type': node_type, 'risk_score': risk}
                 )
                 db.add(graph_node)
                 
@@ -127,7 +127,7 @@ class GraphAnalysisService:
                     from_node=str(from_node),
                     to_node=str(to_node),
                     weight=weight,
-                    metadata={'weight': weight}
+                    meta_data={'weight': weight}
                 )
                 db.add(graph_edge)
                 
