@@ -388,3 +388,88 @@ export const fraudDetectionPosture = [
   { category: 'Identity Theft', score: 92 },
   { category: 'Wire Fraud', score: 87 }
 ];
+
+export const liveSignals = [
+  {
+    id: 1,
+    title: 'Velocity spike in prepaid cards',
+    detail: '12x baseline across 3 BINs',
+    severity: 'critical',
+    time: '2m ago'
+  },
+  {
+    id: 2,
+    title: 'Account takeover cluster',
+    detail: 'Credential stuffing from 4 geos',
+    severity: 'high',
+    time: '6m ago'
+  },
+  {
+    id: 3,
+    title: 'Friendly fraud pattern',
+    detail: 'Chargeback surge in travel',
+    severity: 'medium',
+    time: '12m ago'
+  },
+  {
+    id: 4,
+    title: 'Device fingerprint collision',
+    detail: 'Shared device across 9 accounts',
+    severity: 'low',
+    time: '21m ago'
+  }
+];
+
+export const modelHealth = [
+  { name: 'Fraud Detector', score: 98, drift: 'Low', latency: '84ms' },
+  { name: 'Risk Scorer', score: 95, drift: 'Low', latency: '58ms' },
+  { name: 'Graph Analyzer', score: 92, drift: 'Moderate', latency: '132ms' }
+];
+
+export const responsePlaybooks = [
+  {
+    title: 'Auto-block + notify',
+    description: 'Block card, push verification, open case.',
+    coverage: 'High',
+    eta: '45s'
+  },
+  {
+    title: 'Step-up challenge',
+    description: 'OTP + biometric for high-value transfers.',
+    coverage: 'Medium',
+    eta: '2m'
+  },
+  {
+    title: 'Merchant hold',
+    description: 'Pause settlement for risky merchant.',
+    coverage: 'Selective',
+    eta: '10m'
+  }
+];
+
+export const triageQueue = [
+  {
+    id: 1,
+    title: 'Card testing burst',
+    owner: 'A. Singh',
+    amount: '₹1.2M',
+    status: 'Investigate',
+    eta: '15m'
+  },
+  {
+    id: 2,
+    title: 'Account takeover suspected',
+    owner: 'K. Mehta',
+    amount: '₹420K',
+    status: 'Blocked',
+    eta: '5m'
+  },
+  {
+    id: 3,
+    title: 'High-value wire anomaly',
+    owner: 'R. Shah',
+    amount: '₹3.8M',
+    status: 'Review',
+    eta: '30m'
+  }
+];
