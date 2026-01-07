@@ -4,17 +4,22 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import MetricCard from '../components/MetricCard';
 import FraudCard from '../components/FraudCard';
 import BackendTest from '../components/BackendTest';
-import { dashboardMetrics, fraudDetectionPosture, fraudTrendData, liveSignals, modelHealth, monitoredAccounts, recentFraudAlerts, responsePlaybooks } from '../data/mockData';
+import { dashboardMetrics, fraudDetectionPosture, fraudTrendData, monitoredAccounts, recentFraudAlerts } from '../data/mockData';
 import { accountsService, dashboardService, fraudService } from '../services/api';
 import { usePresentationMode } from '../utils/presentationMode';
 
 const Dashboard = () => {
-  const [presentationMode, setPresentationMode] = usePresentationMode();
+  const [presentationMode] = usePresentationMode();
   const [metrics, setMetrics] = useState(null);
   const [fraudTrends, setFraudTrends] = useState([]);
   const [detectionPosture, setDetectionPosture] = useState([]);
   const [recentAlerts, setRecentAlerts] = useState([]);
   const [monitoredSummary, setMonitoredSummary] = useState([]);
+  const [showBrief, setShowBrief] = useState(false);
+  const [showScenario, setShowScenario] = useState(false);
+  const [selectedScenario, setSelectedScenario] = useState('card_testing');
+  const [scenarioResult, setScenarioResult] = useState(null);
+  const [briefCopied, setBriefCopied] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -70,6 +75,56 @@ const Dashboard = () => {
     return monitoredSummary.reduce((sum, account) => sum + (account.count || 0), 0);
   }, [monitoredSummary]);
 
+  const modelsTotal = useMemo(() => {
+    return detectionPosture.length || 12;
+  }, [detectionPosture]);
+
+  const modelsOnline = useMemo(() => {
+    if (!detectionPosture.length) {
+      return 12;
+    }
+    const onlineCount = detectionPosture.filter((model) => (model.score || 0) >= 75).length;
+    return onlineCount || detectionPosture.length;
+  }, [detectionPosture]);
+
+  const responseSlaMinutes = useMemo(() => {
+    if (!recentAlerts.length) {
+      return 2.4;
+    }
+    const avgRisk = recentAlerts.reduce((sum, alert) => {
+      const score = alert.risk_score ?? alert.riskScore ?? 0;
+      return sum + score;
+    }, 0) / recentAlerts.length;
+    const scaled = 4.8 - (avgRisk / 100) * 2.4;
+    return Number(Math.max(1.4, scaled).toFixed(1));
+  }, [recentAlerts]);
+
+  const handoffMinutes = useMemo(() => {
+    if (!recentAlerts.length) {
+      return 12;
+    }
+    const latest = recentAlerts[0];
+    if (latest.created_at) {
+      const deltaMs = Date.now() - new Date(latest.created_at).getTime();
+      if (!Number.isNaN(deltaMs)) {
+        return Math.max(1, Math.round(deltaMs / 60000));
+      }
+    }
+    if (latest.time) {
+      const match = latest.time.match(/(\d+)\s*min/i);
+      if (match) {
+        return Number(match[1]);
+      }
+    }
+    return 12;
+  }, [recentAlerts]);
+
+  const escalationCount = useMemo(() => {
+    return recentAlerts.filter((alert) =>
+      ['Under Investigation', 'Pending Review'].includes(alert.status)
+    ).length;
+  }, [recentAlerts]);
+
   const formattedAlerts = useMemo(() => {
     return recentAlerts.map((alert) => ({
       id: alert.id,
@@ -85,10 +140,183 @@ const Dashboard = () => {
     }));
   }, [recentAlerts]);
 
+  const formatCurrency = (amount) => {
+    if (typeof amount !== 'number') {
+      return '--';
+    }
+    return amount.toLocaleString('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    });
+  };
+
+  const liveSignals = useMemo(() => {
+    return formattedAlerts.slice(0, 4).map((alert, index) => {
+      const riskScore = alert.riskScore || 0;
+      let severity = 'low';
+      if (riskScore >= 90) severity = 'critical';
+      else if (riskScore >= 75) severity = 'high';
+      else if (riskScore >= 60) severity = 'medium';
+      return {
+        id: alert.id || index,
+        title: `${alert.type} signal`,
+        detail: `${alert.customer} · ${formatCurrency(alert.amount)}`,
+        severity,
+        time: alert.time,
+      };
+    });
+  }, [formattedAlerts]);
+
+  const modelHealth = useMemo(() => {
+    if (!detectionPosture.length) {
+      return [];
+    }
+    return detectionPosture.slice(0, 4).map((model) => {
+      const score = model.score || 0;
+      const latency = Math.max(80, Math.round(180 - score));
+      const drift = score >= 85 ? 'Stable' : score >= 70 ? 'Moderate' : 'High';
+      return {
+        name: model.category,
+        score,
+        latency: `${latency}ms`,
+        drift,
+      };
+    });
+  }, [detectionPosture]);
+
+  const driftAlerts = useMemo(() => {
+    if (!detectionPosture.length) {
+      return 0;
+    }
+    return detectionPosture.filter((model) => (model.score || 0) < 80).length;
+  }, [detectionPosture]);
+
+  const responsePlaybooks = useMemo(() => {
+    if (!recentAlerts.length) {
+      return [];
+    }
+    const typeCounts = recentAlerts.reduce((acc, alert) => {
+      const type = alert.type || 'Unknown Fraud';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(typeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([type, count]) => {
+        const eta = Math.max(8, Math.round(30 - count * 2));
+        return {
+          title: `${type} Response`,
+          coverage: `${count} cases`,
+          description: `Auto-triage for ${type.toLowerCase()} patterns`,
+          eta: `${eta}m`,
+        };
+      });
+  }, [recentAlerts]);
+
   const fraudDetectionRate = metrics?.fraudDetectionRate ?? 0;
   const suspiciousTransactions = metrics?.suspiciousTransactions ?? 0;
   const confirmedFrauds = metrics?.confirmedFrauds ?? 0;
   const falsePositiveRate = metrics?.falsePositiveRate ?? 0;
+  const topAlertType = useMemo(() => {
+    if (!recentAlerts.length) {
+      return 'Card Testing';
+    }
+    const counts = recentAlerts.reduce((acc, alert) => {
+      const type = alert.type || 'Unknown Fraud';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+    const [topType] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    return topType || 'Card Testing';
+  }, [recentAlerts]);
+
+  const briefSummary = useMemo(() => {
+    return [
+      `AEGIS Command Brief · ${new Date().toLocaleString()}`,
+      `Risk Index: ${riskIndex}`,
+      `Fraud Detection Rate: ${fraudDetectionRate}%`,
+      `Suspicious Transactions: ${suspiciousTransactions}`,
+      `Confirmed Frauds: ${confirmedFrauds}`,
+      `False Positive Rate: ${falsePositiveRate}%`,
+      `Top Alert Type: ${topAlertType}`,
+      `Escalations: ${escalationCount}`,
+      `Avg Response SLA: ${responseSlaMinutes}m`,
+      `Last Handoff: ${handoffMinutes}m ago`,
+    ].join('\n');
+  }, [
+    riskIndex,
+    fraudDetectionRate,
+    suspiciousTransactions,
+    confirmedFrauds,
+    falsePositiveRate,
+    topAlertType,
+    escalationCount,
+    responseSlaMinutes,
+    handoffMinutes,
+  ]);
+
+  const scenarioOptions = [
+    {
+      id: 'card_testing',
+      label: 'Card testing surge',
+      description: 'Rapid low-value burst across new cards',
+      fraudMultiplier: 1.35,
+      slaDelta: 0.6,
+      riskDelta: 4,
+    },
+    {
+      id: 'account_takeover',
+      label: 'Account takeover wave',
+      description: 'Credential stuffing + device anomalies',
+      fraudMultiplier: 1.5,
+      slaDelta: 0.9,
+      riskDelta: 6,
+    },
+    {
+      id: 'merchant_breach',
+      label: 'Merchant breach',
+      description: 'Compromised merchant ecosystem',
+      fraudMultiplier: 1.25,
+      slaDelta: 0.4,
+      riskDelta: 3,
+    },
+  ];
+
+  const handleCopyBrief = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(briefSummary);
+      }
+      setBriefCopied(true);
+      setTimeout(() => setBriefCopied(false), 1600);
+    } catch (error) {
+      setBriefCopied(false);
+    }
+  };
+
+  const handleRunScenario = () => {
+    const scenario = scenarioOptions.find((option) => option.id === selectedScenario);
+    if (!scenario) {
+      return;
+    }
+    const projectedSuspicious = Math.round(suspiciousTransactions * scenario.fraudMultiplier);
+    const projectedBlocked = Math.round(confirmedFrauds * scenario.fraudMultiplier);
+    const projectedRate = Math.min(99, Math.max(70, fraudDetectionRate - scenario.slaDelta * 2));
+    const projectedRisk = Math.min(99, riskIndex + scenario.riskDelta);
+    const projectedSla = Number((responseSlaMinutes + scenario.slaDelta).toFixed(1));
+
+    setScenarioResult({
+      scenario: scenario.label,
+      suspicious: projectedSuspicious,
+      blocked: projectedBlocked,
+      detectionRate: projectedRate,
+      riskIndex: projectedRisk,
+      responseSla: projectedSla,
+    });
+  };
 
   const getSignalColor = (severity) => {
     switch (severity) {
@@ -121,20 +349,16 @@ const Dashboard = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <button className="px-4 py-2 rounded-lg bg-slate-900/70 border border-slate-800 text-slate-200 text-sm">
+                <button
+                  className="px-4 py-2 rounded-lg bg-slate-900/70 border border-slate-800 text-slate-200 text-sm"
+                  onClick={() => setShowBrief(true)}
+                >
                   Generate Brief
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-lg border text-sm font-semibold ${
-                    presentationMode
-                      ? 'bg-amber-500/90 border-amber-400 text-slate-900'
-                      : 'bg-slate-900/70 border-slate-800 text-slate-200'
-                  }`}
-                  onClick={() => setPresentationMode(!presentationMode)}
+                  className="px-4 py-2 rounded-lg bg-cyan-500/90 hover:bg-cyan-500 text-white text-sm font-semibold flex items-center gap-2"
+                  onClick={() => setShowScenario(true)}
                 >
-                  {presentationMode ? 'Presentation Mode: On' : 'Presentation Mode: Off'}
-                </button>
-                <button className="px-4 py-2 rounded-lg bg-cyan-500/90 hover:bg-cyan-500 text-white text-sm font-semibold flex items-center gap-2">
                   <Zap className="w-4 h-4" />
                   Run Scenario
                 </button>
@@ -156,12 +380,14 @@ const Dashboard = () => {
               </div>
               <div className="aegis-panel-soft rounded-2xl p-4">
                 <p className="text-xs text-slate-400">Models Online</p>
-                <p className="text-2xl font-semibold text-emerald-300">12/12</p>
-                <p className="text-xs text-slate-500 mt-1">No drift alerts</p>
+                <p className="text-2xl font-semibold text-emerald-300">{modelsOnline}/{modelsTotal}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {driftAlerts ? `${driftAlerts} drift alerts` : 'No drift alerts'}
+                </p>
               </div>
               <div className="aegis-panel-soft rounded-2xl p-4">
                 <p className="text-xs text-slate-400">Response SLA</p>
-                <p className="text-2xl font-semibold text-rose-300">2.4m</p>
+                <p className="text-2xl font-semibold text-rose-300">{responseSlaMinutes}m</p>
                 <p className="text-xs text-slate-500 mt-1">Avg. case resolution</p>
               </div>
             </div>
@@ -182,7 +408,7 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="mt-4 text-xs text-slate-500">
-              Last handoff 12m ago · Escalations 2
+              Last handoff {handoffMinutes}m ago · Escalations {escalationCount}
             </div>
           </div>
         </div>
@@ -294,6 +520,9 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
+            {!liveSignals.length && (
+              <div className="text-xs text-slate-500">No live signals available.</div>
+            )}
           </div>
         </div>
 
@@ -319,6 +548,9 @@ const Dashboard = () => {
                 <div className="text-xs text-slate-500 mt-2">Drift: {model.drift}</div>
               </div>
             ))}
+            {!modelHealth.length && (
+              <div className="text-xs text-slate-500">No model telemetry available.</div>
+            )}
           </div>
         </div>
 
@@ -343,6 +575,9 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
+            {!responsePlaybooks.length && (
+              <div className="text-xs text-slate-500">No playbooks generated.</div>
+            )}
           </div>
         </div>
       </div>
@@ -361,6 +596,126 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
+
+      {showBrief && (
+        <div
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center px-4"
+          onClick={() => setShowBrief(false)}
+        >
+          <div
+            className="aegis-panel rounded-2xl p-6 border border-slate-800/70 max-w-2xl w-full"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Command Brief</p>
+                <h3 className="text-xl font-semibold text-white mt-1">Executive Summary</h3>
+              </div>
+              <button
+                className="text-xs text-slate-400 hover:text-white"
+                onClick={() => setShowBrief(false)}
+              >
+                Close
+              </button>
+            </div>
+            <pre className="bg-slate-900/70 border border-slate-800 rounded-xl p-4 text-xs text-slate-200 whitespace-pre-wrap">
+              {briefSummary}
+            </pre>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-xs text-slate-400">
+                Snapshot from live telemetry · {new Date().toLocaleTimeString()}
+              </span>
+              <button
+                className="px-3 py-2 rounded-lg bg-cyan-500/90 hover:bg-cyan-500 text-white text-xs font-semibold"
+                onClick={handleCopyBrief}
+              >
+                {briefCopied ? 'Copied' : 'Copy Summary'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showScenario && (
+        <div
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center px-4"
+          onClick={() => setShowScenario(false)}
+        >
+          <div
+            className="aegis-panel rounded-2xl p-6 border border-slate-800/70 max-w-3xl w-full"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Scenario Lab</p>
+                <h3 className="text-xl font-semibold text-white mt-1">Run Response Simulation</h3>
+              </div>
+              <button
+                className="text-xs text-slate-400 hover:text-white"
+                onClick={() => setShowScenario(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="grid md:grid-cols-[1fr_1.2fr] gap-4">
+              <div className="space-y-3">
+                {scenarioOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    className={`w-full text-left p-3 rounded-xl border ${
+                      selectedScenario === option.id
+                        ? 'border-cyan-500/60 bg-cyan-500/10'
+                        : 'border-slate-800 bg-slate-900/60'
+                    }`}
+                    onClick={() => {
+                      setSelectedScenario(option.id);
+                      setScenarioResult(null);
+                    }}
+                  >
+                    <p className="text-sm text-white font-semibold">{option.label}</p>
+                    <p className="text-xs text-slate-400">{option.description}</p>
+                  </button>
+                ))}
+                <button
+                  className="w-full px-4 py-2 rounded-lg bg-cyan-500/90 hover:bg-cyan-500 text-white text-sm font-semibold"
+                  onClick={handleRunScenario}
+                >
+                  Simulate Impact
+                </button>
+              </div>
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-500 mb-3">Projected Impact</p>
+                {scenarioResult ? (
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="aegis-panel-soft rounded-xl p-3 border border-slate-800/70">
+                      <p className="text-xs text-slate-400">Suspicious Transactions</p>
+                      <p className="text-lg font-semibold text-amber-300">{scenarioResult.suspicious}</p>
+                    </div>
+                    <div className="aegis-panel-soft rounded-xl p-3 border border-slate-800/70">
+                      <p className="text-xs text-slate-400">Blocked Frauds</p>
+                      <p className="text-lg font-semibold text-emerald-300">{scenarioResult.blocked}</p>
+                    </div>
+                    <div className="aegis-panel-soft rounded-xl p-3 border border-slate-800/70">
+                      <p className="text-xs text-slate-400">Detection Rate</p>
+                      <p className="text-lg font-semibold text-cyan-300">{scenarioResult.detectionRate}%</p>
+                    </div>
+                    <div className="aegis-panel-soft rounded-xl p-3 border border-slate-800/70">
+                      <p className="text-xs text-slate-400">Response SLA</p>
+                      <p className="text-lg font-semibold text-rose-300">{scenarioResult.responseSla}m</p>
+                    </div>
+                    <div className="aegis-panel-soft rounded-xl p-3 border border-slate-800/70 col-span-2">
+                      <p className="text-xs text-slate-400">Risk Index</p>
+                      <p className="text-lg font-semibold text-amber-300">{scenarioResult.riskIndex}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">Select a scenario and run the simulation.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
