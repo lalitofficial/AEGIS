@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Shield, AlertTriangle, FileText, Database, Activity } from 'lucide-react';
+import { fraudService } from '../services/api';
+import { recentFraudAlerts } from '../data/mockData';
+import { usePresentationMode } from '../utils/presentationMode';
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
+  const [presentationMode, setPresentationMode] = usePresentationMode();
+  const [activeInvestigations, setActiveInvestigations] = useState(0);
+  const [aiConfidence, setAiConfidence] = useState(78);
   
   const menuItems = [
     { path: '/dashboard', label: 'Command Center', icon: LayoutDashboard },
@@ -12,6 +18,52 @@ const Sidebar = ({ isOpen }) => {
     { path: '/compliance', label: 'Compliance', icon: FileText },
     { path: '/monitored-accounts', label: 'Account Watchlist', icon: Database },
   ];
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const computeStats = (alerts) => {
+      const investigations = (alerts || []).filter(
+        (alert) => alert.status === 'Under Investigation'
+      ).length;
+      const scores = (alerts || [])
+        .map((alert) => alert.risk_score ?? alert.riskScore ?? 0)
+        .filter((score) => score > 0);
+      const avgScore = scores.length
+        ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+        : 78;
+
+      return {
+        investigations,
+        confidence: Math.min(100, Math.max(50, avgScore)),
+      };
+    };
+
+    const loadStats = async () => {
+      if (presentationMode) {
+        if (!isMounted) {
+          return;
+        }
+        const { investigations, confidence } = computeStats(recentFraudAlerts);
+        setActiveInvestigations(investigations);
+        setAiConfidence(confidence);
+        return;
+      }
+
+      const alerts = await fraudService.getRecentAlerts(50);
+      if (!isMounted) {
+        return;
+      }
+      const { investigations, confidence } = computeStats(alerts || []);
+      setActiveInvestigations(investigations);
+      setAiConfidence(confidence);
+    };
+
+    loadStats();
+    return () => {
+      isMounted = false;
+    };
+  }, [presentationMode]);
 
   return (
     <aside className={`fixed left-0 top-16 h-full bg-slate-950/70 border-r border-slate-800/60 backdrop-blur-xl transition-all duration-300 ${
@@ -47,10 +99,28 @@ const Sidebar = ({ isOpen }) => {
             Pulse Status
           </div>
           <div className="text-xs text-slate-400">Active investigations</div>
-          <div className="text-2xl font-semibold text-amber-300">18</div>
+          <div className="text-2xl font-semibold text-amber-300">{activeInvestigations}</div>
           <div className="mt-3 text-xs text-slate-400">AI confidence</div>
           <div className="w-full bg-slate-800 rounded-full h-2 mt-2 overflow-hidden">
-            <div className="bg-gradient-to-r from-cyan-400 to-emerald-400 h-2 w-[78%]" />
+            <div
+              className="bg-gradient-to-r from-cyan-400 to-emerald-400 h-2"
+              style={{ width: `${aiConfidence}%` }}
+            />
+          </div>
+          <div className="mt-4 pt-4 border-t border-slate-800/80">
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <span>Presentation Mode</span>
+              <button
+                className={`px-2 py-1 rounded-full border text-[11px] ${
+                  presentationMode
+                    ? 'border-amber-400 text-amber-300'
+                    : 'border-slate-700 text-slate-400'
+                }`}
+                onClick={() => setPresentationMode(!presentationMode)}
+              >
+                {presentationMode ? 'On' : 'Off'}
+              </button>
+            </div>
           </div>
         </div>
       </nav>
