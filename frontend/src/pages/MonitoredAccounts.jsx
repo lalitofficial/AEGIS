@@ -1,16 +1,44 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Database, CreditCard, Briefcase, Smartphone, TrendingUp, CheckCircle, AlertTriangle, XCircle, DollarSign } from 'lucide-react';
-import { monitoredAccounts } from '../data/mockData';
+import { accountsService } from '../services/api';
 
 const MonitoredAccounts = () => {
-  const totalAccounts = monitoredAccounts.reduce((sum, account) => sum + account.count, 0);
-  const totalClean = monitoredAccounts.reduce((sum, account) => sum + account.clean, 0);
-  const totalFlagged = monitoredAccounts.reduce((sum, account) => sum + account.flagged, 0);
+  const [monitoredAccounts, setMonitoredAccounts] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAccounts = async () => {
+      const data = await accountsService.getMonitoredAccounts();
+      if (!isMounted) return;
+      setMonitoredAccounts(data || []);
+    };
+
+    loadAccounts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const totalAccounts = useMemo(
+    () => monitoredAccounts.reduce((sum, account) => sum + (account.count || 0), 0),
+    [monitoredAccounts]
+  );
+  const totalClean = useMemo(
+    () => monitoredAccounts.reduce((sum, account) => sum + (account.clean || 0), 0),
+    [monitoredAccounts]
+  );
+  const totalFlagged = useMemo(
+    () => monitoredAccounts.reduce((sum, account) => sum + (account.flagged || 0), 0),
+    [monitoredAccounts]
+  );
 
   const getStatusIcon = (status) => {
     switch(status) {
       case 'healthy': return <CheckCircle className="w-6 h-6 text-green-400" />;
-      case 'warning': return <AlertTriangle className="w-6 h-6 text-yellow-400" />;
+      case 'warning':
+      case 'watch':
+        return <AlertTriangle className="w-6 h-6 text-yellow-400" />;
       case 'critical': return <XCircle className="w-6 h-6 text-red-400" />;
       default: return null;
     }
@@ -48,7 +76,9 @@ const MonitoredAccounts = () => {
             <span className="text-slate-400">Clean Accounts</span>
           </div>
           <p className="text-3xl font-bold text-green-400">{totalClean.toLocaleString()}</p>
-          <p className="text-sm text-slate-500 mt-1">{((totalClean / totalAccounts) * 100).toFixed(1)}% of total</p>
+          <p className="text-sm text-slate-500 mt-1">
+            {totalAccounts ? ((totalClean / totalAccounts) * 100).toFixed(1) : '0.0'}% of total
+          </p>
         </div>
 
         <div className="aegis-panel rounded-2xl p-6 border border-red-500/20">
@@ -65,7 +95,7 @@ const MonitoredAccounts = () => {
       <div className="space-y-4">
         {monitoredAccounts.map((account) => {
           const AccountIcon = getAccountIcon(account.name);
-          const cleanRate = ((account.clean / account.count) * 100).toFixed(1);
+          const cleanRate = account.count ? ((account.clean / account.count) * 100).toFixed(1) : '0.0';
           
           return (
             <div key={account.name} className="aegis-panel rounded-2xl p-6 border border-slate-800/70 hover:border-cyan-500/50 transition-all">
@@ -104,8 +134,8 @@ const MonitoredAccounts = () => {
                   <p className="text-xl font-bold text-red-400">{account.flagged}</p>
                 </div>
                 <div className="text-center p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                  <p className="text-slate-400 text-sm mb-1">Volume (30d)</p>
-                  <p className="text-xl font-bold text-amber-300">${account.transactionVolume}</p>
+                  <p className="text-slate-400 text-sm mb-1">Transactions (30d)</p>
+                  <p className="text-xl font-bold text-amber-300">{account.transactionVolume}</p>
                 </div>
               </div>
 
@@ -121,10 +151,10 @@ const MonitoredAccounts = () => {
               <div className="flex items-center justify-between">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                   account.status === 'healthy' ? 'text-green-400 bg-green-500/10 border border-green-500/30' :
-                  account.status === 'warning' ? 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/30' :
+                  account.status === 'warning' || account.status === 'watch' ? 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/30' :
                   'text-red-400 bg-red-500/10 border border-red-500/30'
                 }`}>
-                  {account.status.charAt(0).toUpperCase() + account.status.slice(1)}
+                  {(account.status || 'healthy').replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                 </span>
                 
                 <div className="flex gap-2">

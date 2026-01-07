@@ -28,9 +28,9 @@ export const fraudService = {
   },
 
   // Get recent alerts from the database
-  getRecentAlerts: async () => {
+  getRecentAlerts: async (limit) => {
     try {
-      const response = await api.get('/fraud/alerts');
+      const response = await api.get('/fraud/alerts', { params: limit ? { limit } : {} });
       return response.data;
     } catch (error) {
       console.error("Error fetching alerts:", error);
@@ -48,6 +48,108 @@ export const dashboardService = {
     } catch (error) {
       console.error("Error fetching metrics:", error);
       return null;
+    }
+  },
+  getFraudTrends: async () => {
+    try {
+      const response = await api.get('/dashboard/fraud-trends');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching fraud trends:", error);
+      return [];
+    }
+  },
+  getFraudTypeDistribution: async () => {
+    try {
+      const response = await api.get('/dashboard/fraud-type-distribution');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching fraud distribution:", error);
+      return [];
+    }
+  },
+  getDetectionPosture: async () => {
+    try {
+      const response = await api.get('/dashboard/detection-posture');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching detection posture:", error);
+      return [];
+    }
+  }
+};
+
+export const accountsService = {
+  getMonitoredAccounts: async () => {
+    try {
+      const response = await api.get('/accounts/monitored');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching monitored accounts:", error);
+      return [];
+    }
+  }
+};
+
+export const graphService = {
+  getGraphData: async () => {
+    try {
+      const response = await api.get('/graph/data');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching graph data:", error);
+      return { nodes: [], edges: [] };
+    }
+  }
+};
+
+export const complianceService = {
+  getFrameworks: async () => {
+    try {
+      const response = await api.get('/compliance/frameworks');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching compliance frameworks:", error);
+      return [];
+    }
+  },
+  getActivities: async () => {
+    try {
+      const response = await api.get('/compliance/activities');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching compliance activities:", error);
+      return [];
+    }
+  }
+};
+
+export const riskService = {
+  getRiskProfiles: async () => {
+    try {
+      const response = await api.get('/risk/profiles');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching risk profiles:", error);
+      return [];
+    }
+  },
+  getHighRiskProfiles: async (threshold) => {
+    try {
+      const response = await api.get('/risk/profiles/high', { params: threshold ? { threshold } : {} });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching high-risk profiles:", error);
+      return [];
+    }
+  },
+  getRiskDistribution: async () => {
+    try {
+      const response = await api.get('/risk/distribution');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching risk distribution:", error);
+      return { critical: 0, high: 0, medium: 0, low: 0 };
     }
   }
 };

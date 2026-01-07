@@ -1,11 +1,64 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Shield, Activity, Search, ArrowUpRight, CheckCircle2, XCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import FraudCard from '../components/FraudCard';
-import { recentFraudAlerts, fraudTrendData, fraudTypeDistribution, triageQueue } from '../data/mockData';
+import { triageQueue } from '../data/mockData';
+import { dashboardService, fraudService } from '../services/api';
 import GraphView from '../components/GraphView'; // <-- NEW IMPORT
 
 const FraudAlerts = () => {
+  const [alerts, setAlerts] = useState([]);
+  const [fraudTrends, setFraudTrends] = useState([]);
+  const [fraudTypeDistribution, setFraudTypeDistribution] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      const [alertsData, trendsData, distributionData] = await Promise.all([
+        fraudService.getRecentAlerts(50),
+        dashboardService.getFraudTrends(),
+        dashboardService.getFraudTypeDistribution(),
+      ]);
+
+      if (!isMounted) return;
+      setAlerts(alertsData || []);
+      setFraudTrends(trendsData || []);
+      setFraudTypeDistribution(distributionData || []);
+    };
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const formattedAlerts = useMemo(() => {
+    return alerts.map((alert) => ({
+      id: alert.id,
+      type: alert.type || 'Unknown Fraud',
+      transactionId: alert.transaction_id || alert.transactionId || 'N/A',
+      amount: alert.amount || 0,
+      customer: alert.customer_name || alert.customer || 'Unknown',
+      customerId: alert.customer_id || alert.customerId || 'N/A',
+      riskScore: alert.risk_score ?? alert.riskScore ?? 0,
+      indicators: alert.indicators || [],
+      status: alert.status || 'Pending Review',
+      time: alert.created_at ? new Date(alert.created_at).toLocaleString() : 'Just now',
+    }));
+  }, [alerts]);
+
+  const { activeInvestigations, blockedCount, pendingCount } = useMemo(() => {
+    let investigations = 0;
+    let blocked = 0;
+    let pending = 0;
+    alerts.forEach((alert) => {
+      if (alert.status === 'Under Investigation') investigations += 1;
+      if (alert.status === 'Blocked') blocked += 1;
+      if (alert.status === 'Pending Review') pending += 1;
+    });
+    return { activeInvestigations: investigations, blockedCount: blocked, pendingCount: pending };
+  }, [alerts]);
   const getQueueStatus = (status) => {
     switch (status) {
       case 'Blocked':
@@ -31,7 +84,7 @@ const FraudAlerts = () => {
             <Activity className="w-6 h-6 text-yellow-400" />
             <span className="text-slate-400">Active Investigations</span>
           </div>
-          <p className="text-3xl font-bold text-white">18</p>
+          <p className="text-3xl font-bold text-white">{activeInvestigations}</p>
           <p className="text-sm text-slate-500 mt-1">Currently being reviewed</p>
         </div>
 
@@ -40,7 +93,7 @@ const FraudAlerts = () => {
             <Shield className="w-6 h-6 text-green-400" />
             <span className="text-slate-400">Blocked Today</span>
           </div>
-          <p className="text-3xl font-bold text-white">1,247</p>
+          <p className="text-3xl font-bold text-white">{blockedCount.toLocaleString()}</p>
           <p className="text-sm text-slate-500 mt-1">98.6% success rate</p>
         </div>
 
@@ -49,7 +102,7 @@ const FraudAlerts = () => {
             <AlertTriangle className="w-6 h-6 text-orange-400" />
             <span className="text-slate-400">Pending Review</span>
           </div>
-          <p className="text-3xl font-bold text-white">5</p>
+          <p className="text-3xl font-bold text-white">{pendingCount}</p>
           <p className="text-sm text-slate-500 mt-1">Requires attention</p>
         </div>
       </div>
@@ -130,7 +183,7 @@ const FraudAlerts = () => {
       <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
         <h3 className="text-lg font-semibold text-white mb-4">Fraud Trends by Type</h3>
         <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={fraudTrendData}>
+          <BarChart data={fraudTrends}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey="time" stroke="#94a3b8" />
             <YAxis stroke="#94a3b8" />
@@ -188,7 +241,7 @@ const FraudAlerts = () => {
       <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
         <h3 className="text-lg font-semibold text-white mb-4">All Detected Frauds</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {recentFraudAlerts.map((fraud) => (
+          {formattedAlerts.map((fraud) => (
             <FraudCard key={fraud.id} fraud={fraud} />
           ))}
         </div>

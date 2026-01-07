@@ -1,18 +1,42 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Network } from 'vis-network/standalone';
-import { fraudGraphData } from '../data/mockData';
 import { Loader2 } from 'lucide-react';
+import { graphService } from '../services/api';
 
 const GraphView = () => {
     const networkRef = useRef(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
 
     useEffect(() => {
+        let isMounted = true;
+
+        const loadGraph = async () => {
+            const data = await graphService.getGraphData();
+            if (!isMounted) return;
+            setGraphData(data || { nodes: [], edges: [] });
+        };
+
+        loadGraph();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!networkRef.current) return;
+
+        const nodes = graphData?.nodes || [];
+        const edges = graphData?.edges || [];
+        if (!nodes.length) {
+            setIsLoading(false);
+            return;
+        }
         setIsLoading(true);
 
         const data = {
-            nodes: fraudGraphData.nodes,
-            edges: fraudGraphData.edges,
+            nodes,
+            edges,
         };
 
         const options = {
@@ -94,23 +118,27 @@ const GraphView = () => {
             },
         };
 
-        if (networkRef.current) {
-            const network = new Network(networkRef.current, data, options);
-            
-            network.once('stabilizationIterationsDone', function () {
-                setIsLoading(false);
-                network.fit();
-            });
-            
-            network.on('click', (properties) => {
-                if (properties.nodes.length > 0) {
-                    const nodeId = properties.nodes[0];
-                    const clickedNode = data.nodes.find(n => n.id === nodeId);
+        const network = new Network(networkRef.current, data, options);
+        
+        network.once('stabilizationIterationsDone', function () {
+            setIsLoading(false);
+            network.fit();
+        });
+        
+        network.on('click', (properties) => {
+            if (properties.nodes.length > 0) {
+                const nodeId = properties.nodes[0];
+                const clickedNode = data.nodes.find(n => n.id === nodeId);
+                if (clickedNode) {
                     console.log('Node Clicked:', clickedNode.title, 'Group:', clickedNode.group);
                 }
-            });
-        }
-    }, []);
+            }
+        });
+
+        return () => {
+            network.destroy();
+        };
+    }, [graphData]);
 
     return (
         <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70 h-[700px] flex flex-col relative">

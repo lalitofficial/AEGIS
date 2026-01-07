@@ -1,13 +1,80 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle, TrendingDown, ArrowUpRight, Zap } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import MetricCard from '../components/MetricCard';
 import FraudCard from '../components/FraudCard';
 import BackendTest from '../components/BackendTest';
-import { dashboardMetrics, recentFraudAlerts, fraudTrendData, fraudDetectionPosture, liveSignals, modelHealth, responsePlaybooks } from '../data/mockData';
+import { liveSignals, modelHealth, responsePlaybooks } from '../data/mockData';
+import { accountsService, dashboardService, fraudService } from '../services/api';
 
 const Dashboard = () => {
-  const riskIndex = 86;
+  const [metrics, setMetrics] = useState(null);
+  const [fraudTrends, setFraudTrends] = useState([]);
+  const [detectionPosture, setDetectionPosture] = useState([]);
+  const [recentAlerts, setRecentAlerts] = useState([]);
+  const [monitoredSummary, setMonitoredSummary] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      const [
+        metricsData,
+        trendsData,
+        postureData,
+        alertsData,
+        accountsData,
+      ] = await Promise.all([
+        dashboardService.getMetrics(),
+        dashboardService.getFraudTrends(),
+        dashboardService.getDetectionPosture(),
+        fraudService.getRecentAlerts(6),
+        accountsService.getMonitoredAccounts(),
+      ]);
+
+      if (!isMounted) return;
+      setMetrics(metricsData);
+      setFraudTrends(trendsData || []);
+      setDetectionPosture(postureData || []);
+      setRecentAlerts(alertsData || []);
+      setMonitoredSummary(accountsData || []);
+    };
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const riskIndex = useMemo(() => {
+    if (!detectionPosture.length) return 86;
+    const totalScore = detectionPosture.reduce((sum, item) => sum + (item.score || 0), 0);
+    return Math.round(totalScore / detectionPosture.length);
+  }, [detectionPosture]);
+
+  const totalAccounts = useMemo(() => {
+    return monitoredSummary.reduce((sum, account) => sum + (account.count || 0), 0);
+  }, [monitoredSummary]);
+
+  const formattedAlerts = useMemo(() => {
+    return recentAlerts.map((alert) => ({
+      id: alert.id,
+      type: alert.type || 'Unknown Fraud',
+      transactionId: alert.transaction_id || alert.transactionId || 'N/A',
+      amount: alert.amount || 0,
+      customer: alert.customer_name || alert.customer || 'Unknown',
+      customerId: alert.customer_id || alert.customerId || 'N/A',
+      riskScore: alert.risk_score ?? alert.riskScore ?? 0,
+      indicators: alert.indicators || [],
+      status: alert.status || 'Pending Review',
+      time: alert.created_at ? new Date(alert.created_at).toLocaleString() : 'Just now',
+    }));
+  }, [recentAlerts]);
+
+  const fraudDetectionRate = metrics?.fraudDetectionRate ?? 0;
+  const suspiciousTransactions = metrics?.suspiciousTransactions ?? 0;
+  const confirmedFrauds = metrics?.confirmedFrauds ?? 0;
+  const falsePositiveRate = metrics?.falsePositiveRate ?? 0;
 
   const getSignalColor = (severity) => {
     switch (severity) {
@@ -60,7 +127,7 @@ const Dashboard = () => {
               </div>
               <div className="aegis-panel-soft rounded-2xl p-4">
                 <p className="text-xs text-slate-400">Active Coverage</p>
-                <p className="text-2xl font-semibold text-cyan-300">25,487</p>
+                <p className="text-2xl font-semibold text-cyan-300">{totalAccounts.toLocaleString()}</p>
                 <p className="text-xs text-slate-500 mt-1">Accounts monitored</p>
               </div>
               <div className="aegis-panel-soft rounded-2xl p-4">
@@ -101,7 +168,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 aegis-fade" style={{ animationDelay: '0.1s' }}>
         <MetricCard
           title="Fraud Detection Rate"
-          value={`${dashboardMetrics.fraudDetectionRate}%`}
+          value={`${fraudDetectionRate}%`}
           icon={Shield}
           color="cyan"
           subtitle="System effectiveness"
@@ -109,7 +176,7 @@ const Dashboard = () => {
         />
         <MetricCard
           title="Suspicious Transactions"
-          value={dashboardMetrics.suspiciousTransactions.toLocaleString()}
+          value={suspiciousTransactions.toLocaleString()}
           icon={AlertTriangle}
           color="red"
           subtitle="Flagged today"
@@ -117,7 +184,7 @@ const Dashboard = () => {
         />
         <MetricCard
           title="Confirmed Frauds"
-          value={dashboardMetrics.confirmedFrauds}
+          value={confirmedFrauds}
           icon={CheckCircle}
           color="yellow"
           subtitle="After investigation"
@@ -125,7 +192,7 @@ const Dashboard = () => {
         />
         <MetricCard
           title="False Positive Rate"
-          value={`${dashboardMetrics.falsePositiveRate}%`}
+          value={`${falsePositiveRate}%`}
           icon={TrendingDown}
           color="green"
           subtitle="Legitimate flagged"
@@ -139,7 +206,7 @@ const Dashboard = () => {
         <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
           <h3 className="text-lg font-semibold text-white mb-4">Fraud Activity (24h)</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={fraudTrendData}>
+            <LineChart data={fraudTrends}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
               <XAxis dataKey="time" stroke="#94a3b8" />
               <YAxis stroke="#94a3b8" />
@@ -163,7 +230,7 @@ const Dashboard = () => {
         <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
           <h3 className="text-lg font-semibold text-white mb-4">Detection Capabilities</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <RadarChart data={fraudDetectionPosture}>
+            <RadarChart data={detectionPosture}>
               <PolarGrid stroke="#334155" />
               <PolarAngleAxis dataKey="category" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} />
               <PolarRadiusAxis stroke="#94a3b8" />
@@ -265,7 +332,7 @@ const Dashboard = () => {
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recentFraudAlerts.slice(0, 3).map((fraud) => (
+          {formattedAlerts.slice(0, 3).map((fraud) => (
             <FraudCard key={fraud.id} fraud={fraud} />
           ))}
         </div>

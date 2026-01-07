@@ -1,10 +1,43 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Shield, AlertCircle, Users, TrendingUp } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { riskFactorsData, customerRiskDetails } from '../data/mockData';
+import { riskService } from '../services/api';
 
 const RiskAnalysis = () => {
-  const totalRiskFactors = riskFactorsData.reduce((sum, item) => sum + item.count, 0);
+  const [riskDistribution, setRiskDistribution] = useState({ critical: 0, high: 0, medium: 0, low: 0 });
+  const [highRiskProfiles, setHighRiskProfiles] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      const [distributionData, highRiskData] = await Promise.all([
+        riskService.getRiskDistribution(),
+        riskService.getHighRiskProfiles(),
+      ]);
+
+      if (!isMounted) return;
+      setRiskDistribution(distributionData || { critical: 0, high: 0, medium: 0, low: 0 });
+      setHighRiskProfiles(highRiskData || []);
+    };
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const riskDistributionData = useMemo(() => ([
+    { category: 'Critical', count: riskDistribution.critical, color: '#ef4444' },
+    { category: 'High', count: riskDistribution.high, color: '#f97316' },
+    { category: 'Medium', count: riskDistribution.medium, color: '#eab308' },
+    { category: 'Low', count: riskDistribution.low, color: '#22c55e' },
+  ]), [riskDistribution]);
+
+  const totalRiskProfiles = useMemo(
+    () => riskDistributionData.reduce((sum, item) => sum + item.count, 0),
+    [riskDistributionData]
+  );
 
   const getRiskColor = (score) => {
     if (score >= 90) return 'text-red-500 bg-red-500/10 border-red-500/30';
@@ -32,12 +65,12 @@ const RiskAnalysis = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
-          <p className="text-slate-400 text-sm mb-1">Total Risk Factors</p>
-          <p className="text-3xl font-bold text-white">{totalRiskFactors}</p>
+          <p className="text-slate-400 text-sm mb-1">Total Risk Profiles</p>
+          <p className="text-3xl font-bold text-white">{totalRiskProfiles}</p>
         </div>
         <div className="aegis-panel rounded-2xl p-6 border border-red-500/20">
           <p className="text-slate-400 text-sm mb-1">High-Risk Customers</p>
-          <p className="text-3xl font-bold text-red-400">8</p>
+          <p className="text-3xl font-bold text-red-400">{highRiskProfiles.length}</p>
         </div>
         <div className="aegis-panel rounded-2xl p-6 border border-orange-500/20">
           <p className="text-slate-400 text-sm mb-1">High-Risk Merchants</p>
@@ -53,11 +86,11 @@ const RiskAnalysis = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie Chart */}
         <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
-          <h3 className="text-lg font-semibold text-white mb-4">Risk Factor Distribution</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">Risk Level Distribution</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={riskFactorsData}
+                data={riskDistributionData}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
@@ -66,7 +99,7 @@ const RiskAnalysis = () => {
                 fill="#8884d8"
                 dataKey="count"
               >
-                {riskFactorsData.map((entry, index) => (
+                {riskDistributionData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
@@ -84,9 +117,9 @@ const RiskAnalysis = () => {
 
         {/* Bar Chart */}
         <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
-          <h3 className="text-lg font-semibold text-white mb-4">Risk Factors by Category</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">Risk Levels by Category</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={riskFactorsData}>
+            <BarChart data={riskDistributionData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
               <XAxis dataKey="category" stroke="#94a3b8" angle={-20} textAnchor="end" height={80} />
               <YAxis stroke="#94a3b8" />
@@ -126,40 +159,40 @@ const RiskAnalysis = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
-              {customerRiskDetails.map((customer) => (
-                <tr key={customer.id} className="hover:bg-slate-700/30 transition-colors">
+              {highRiskProfiles.map((customer) => (
+                <tr key={customer.id || customer.customer_id} className="hover:bg-slate-700/30 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-slate-200 font-medium">{customer.name}</span>
+                    <span className="text-slate-200 font-medium">{customer.customer_name || 'Unknown'}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-cyan-400 aegis-mono text-sm">{customer.customerId}</span>
+                    <span className="text-cyan-400 aegis-mono text-sm">{customer.customer_id}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getRiskColor(customer.riskScore)}`}>
-                        {customer.riskScore}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getRiskColor(customer.risk_score)}`}>
+                        {customer.risk_score}
                       </span>
                       <div className="w-16 bg-slate-700 rounded-full h-2">
                         <div 
                           className={`h-2 rounded-full ${
-                            customer.riskScore >= 90 ? 'bg-red-500' : 
-                            customer.riskScore >= 70 ? 'bg-orange-500' : 'bg-yellow-500'
+                            customer.risk_score >= 90 ? 'bg-red-500' : 
+                            customer.risk_score >= 70 ? 'bg-orange-500' : 'bg-yellow-500'
                           }`}
-                          style={{ width: `${customer.riskScore}%` }}
+                          style={{ width: `${customer.risk_score}%` }}
                         ></div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1 max-w-xs">
-                      {customer.riskFactors.slice(0, 2).map((factor, index) => (
+                      {(customer.risk_factors || []).slice(0, 2).map((factor, index) => (
                         <span key={index} className="text-xs px-2 py-1 bg-red-500/10 text-red-400 rounded">
                           {factor}
                         </span>
                       ))}
-                      {customer.riskFactors.length > 2 && (
+                      {(customer.risk_factors || []).length > 2 && (
                         <span className="text-xs px-2 py-1 bg-slate-700 text-slate-400 rounded">
-                          +{customer.riskFactors.length - 2} more
+                          +{customer.risk_factors.length - 2} more
                         </span>
                       )}
                     </div>
@@ -170,10 +203,12 @@ const RiskAnalysis = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-slate-300 text-sm">{customer.accountAge}</span>
+                    <span className="text-slate-300 text-sm">{customer.account_age}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-slate-400 text-sm">{customer.lastActivity}</span>
+                    <span className="text-slate-400 text-sm">
+                      {customer.last_activity ? new Date(customer.last_activity).toLocaleString() : 'N/A'}
+                    </span>
                   </td>
                 </tr>
               ))}

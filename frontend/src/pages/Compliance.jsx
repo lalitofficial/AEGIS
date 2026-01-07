@@ -1,9 +1,47 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FileText, CheckCircle, AlertTriangle, Clock, Shield } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { complianceFrameworks } from '../data/mockData';
+import { complianceService } from '../services/api';
 
 const Compliance = () => {
+  const [frameworks, setFrameworks] = useState([]);
+  const [activities, setActivities] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      const [frameworkData, activityData] = await Promise.all([
+        complianceService.getFrameworks(),
+        complianceService.getActivities(),
+      ]);
+
+      if (!isMounted) return;
+      setFrameworks(frameworkData || []);
+      setActivities(activityData || []);
+    };
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const compliantCount = useMemo(
+    () => frameworks.filter((framework) => framework.status === 'Compliant').length,
+    [frameworks]
+  );
+  const reviewCount = useMemo(
+    () => frameworks.filter((framework) => framework.status === 'Needs Review').length,
+    [frameworks]
+  );
+
+  const formattedFrameworks = useMemo(() => {
+    return frameworks.map((framework) => ({
+      ...framework,
+      lastAudit: framework.last_audit || framework.lastAudit || 'N/A',
+    }));
+  }, [frameworks]);
   const getStatusColor = (status) => {
     switch(status) {
       case 'Compliant': return 'text-green-400 bg-green-500/10 border-green-500/30';
@@ -36,7 +74,7 @@ const Compliance = () => {
             <FileText className="w-6 h-6 text-cyan-400" />
             <span className="text-slate-400">Frameworks Monitored</span>
           </div>
-          <p className="text-3xl font-bold text-white">{complianceFrameworks.length}</p>
+          <p className="text-3xl font-bold text-white">{frameworks.length}</p>
         </div>
 
         <div className="aegis-panel rounded-2xl p-6 border border-green-500/20">
@@ -44,7 +82,7 @@ const Compliance = () => {
             <CheckCircle className="w-6 h-6 text-green-400" />
             <span className="text-slate-400">Compliant</span>
           </div>
-          <p className="text-3xl font-bold text-green-400">4</p>
+          <p className="text-3xl font-bold text-green-400">{compliantCount}</p>
         </div>
 
         <div className="aegis-panel rounded-2xl p-6 border border-yellow-500/20">
@@ -52,7 +90,7 @@ const Compliance = () => {
             <AlertTriangle className="w-6 h-6 text-yellow-400" />
             <span className="text-slate-400">Needs Review</span>
           </div>
-          <p className="text-3xl font-bold text-yellow-400">1</p>
+          <p className="text-3xl font-bold text-yellow-400">{reviewCount}</p>
         </div>
       </div>
 
@@ -60,7 +98,7 @@ const Compliance = () => {
       <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
         <h3 className="text-lg font-semibold text-white mb-4">Compliance Framework Scores</h3>
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={complianceFrameworks} layout="vertical">
+          <BarChart data={formattedFrameworks} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis type="number" domain={[0, 100]} stroke="#94a3b8" />
             <YAxis dataKey="name" type="category" stroke="#94a3b8" width={120} />
@@ -79,8 +117,8 @@ const Compliance = () => {
 
       {/* Framework Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {complianceFrameworks.map((framework) => (
-          <div key={framework.name} className="aegis-panel rounded-2xl p-6 border border-slate-800/70 hover:border-cyan-500/50 transition-all">
+        {formattedFrameworks.map((framework) => (
+          <div key={framework.id || framework.name} className="aegis-panel rounded-2xl p-6 border border-slate-800/70 hover:border-cyan-500/50 transition-all">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-cyan-500/10 rounded-lg">
@@ -133,60 +171,24 @@ const Compliance = () => {
       <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
         <h3 className="text-lg font-semibold text-white mb-4">Recent Compliance Activities</h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <div>
-                <p className="text-white font-medium">KYC Documentation Completed</p>
-                <p className="text-sm text-slate-400">All new customer verifications processed - Dec 1, 2024</p>
+          {activities.map((activity) => (
+            <div key={activity.id || activity.activity} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                {activity.status === 'completed' ? (
+                  <CheckCircle className="w-5 h-5 text-green-400" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                )}
+                <div>
+                  <p className="text-white font-medium">{activity.activity}</p>
+                  <p className="text-sm text-slate-400">{activity.description}</p>
+                </div>
               </div>
+              <span className="text-xs text-slate-500">
+                {activity.date ? new Date(activity.date).toLocaleDateString() : 'Pending'}
+              </span>
             </div>
-            <span className="text-xs text-slate-500">3 days ago</span>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <div>
-                <p className="text-white font-medium">AML Transaction Monitoring Active</p>
-                <p className="text-sm text-slate-400">Suspicious activity reports filed for Nov 2024</p>
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">5 days ago</span>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-yellow-400" />
-              <div>
-                <p className="text-white font-medium">SOX Audit Review Required</p>
-                <p className="text-sm text-slate-400">Financial controls need quarterly assessment</p>
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">1 week ago</span>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <div>
-                <p className="text-white font-medium">PCI DSS Certification Renewed</p>
-                <p className="text-sm text-slate-400">Valid until Nov 15, 2025</p>
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">2 weeks ago</span>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <div>
-                <p className="text-white font-medium">GDPR Data Privacy Assessment</p>
-                <p className="text-sm text-slate-400">Customer data handling policies updated</p>
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">3 weeks ago</span>
-          </div>
+          ))}
         </div>
       </div>
 
