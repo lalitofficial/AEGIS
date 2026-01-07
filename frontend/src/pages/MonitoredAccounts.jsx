@@ -34,7 +34,7 @@ const MonitoredAccounts = () => {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
           <div className="flex items-center gap-3 mb-2">
             <Database className="w-6 h-6 text-cyan-400" />
             <span className="text-slate-400">Total Accounts</span>
@@ -42,7 +42,7 @@ const MonitoredAccounts = () => {
           <p className="text-3xl font-bold text-white">{totalAccounts.toLocaleString()}</p>
         </div>
 
-        <div className="bg-slate-800 rounded-lg p-6 border border-green-500/20">
+        <div className="aegis-panel rounded-2xl p-6 border border-green-500/20">
           <div className="flex items-center gap-3 mb-2">
             <CheckCircle className="w-6 h-6 text-green-400" />
             <span className="text-slate-400">Clean Accounts</span>
@@ -51,7 +51,7 @@ const MonitoredAccounts = () => {
           <p className="text-sm text-slate-500 mt-1">{((totalClean / totalAccounts) * 100).toFixed(1)}% of total</p>
         </div>
 
-        <div className="bg-slate-800 rounded-lg p-6 border border-red-500/20">
+        <div className="aegis-panel rounded-2xl p-6 border border-red-500/20">
           <div className="flex items-center gap-3 mb-2">
             <AlertTriangle className="w-6 h-6 text-red-400" />
             <span className="text-slate-400">Flagged Accounts</span>
@@ -68,7 +68,7 @@ const MonitoredAccounts = () => {
           const cleanRate = ((account.clean / account.count) * 100).toFixed(1);
           
           return (
-            <div key={account.name} className="bg-slate-800 rounded-lg p-6 border border-slate-700 hover:border-cyan-500/50 transition-all">
+            <div key={account.name} className="aegis-panel rounded-2xl p-6 border border-slate-800/70 hover:border-cyan-500/50 transition-all">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   {getStatusIcon(account.status)}
@@ -90,8 +90,8 @@ const MonitoredAccounts = () => {
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-4 gap-4 mb-4">
-                <div className="text-center p-3 bg-slate-700/50 rounded-lg">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="text-center p-3 bg-slate-900/60 rounded-lg">
                   <p className="text-slate-400 text-sm mb-1">Total</p>
                   <p className="text-xl font-bold text-white">{account.count.toLocaleString()}</p>
                 </div>
@@ -103,9 +103,9 @@ const MonitoredAccounts = () => {
                   <p className="text-slate-400 text-sm mb-1">Flagged</p>
                   <p className="text-xl font-bold text-red-400">{account.flagged}</p>
                 </div>
-                <div className="text-center p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                <div className="text-center p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
                   <p className="text-slate-400 text-sm mb-1">Volume (30d)</p>
-                  <p className="text-xl font-bold text-purple-400">${account.transactionVolume}</p>
+                  <p className="text-xl font-bold text-amber-300">${account.transactionVolume}</p>
                 </div>
               </div>
 
@@ -146,7 +146,7 @@ const MonitoredAccounts = () => {
       {/* Monitoring Insights */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Account Activity Trends */}
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-cyan-400" />
             Account Activity Trends
@@ -172,7 +172,7 @@ const MonitoredAccounts = () => {
         </div>
 
         {/* High-Priority Alerts */}
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-400" />
             High-Priority Alerts
@@ -206,7 +206,7 @@ const MonitoredAccounts = () => {
       </div>
 
       {/* Account Monitoring Settings */}
-      <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg p-6">
+      <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-6">
         <div className="flex items-start gap-4">
           <div className="p-3 bg-cyan-500/20 rounded-lg">
             <Database className="w-6 h-6 text-cyan-400" />
@@ -218,15 +218,15 @@ const MonitoredAccounts = () => {
               High-value accounts have enhanced monitoring with manual review requirements.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-3 bg-slate-800/50 rounded-lg">
+              <div className="p-3 bg-slate-900/60 rounded-lg">
                 <p className="text-xs text-slate-400 mb-1">Scan Frequency</p>
                 <p className="text-white font-semibold">Every 15 minutes</p>
               </div>
-              <div className="p-3 bg-slate-800/50 rounded-lg">
+              <div className="p-3 bg-slate-900/60 rounded-lg">
                 <p className="text-xs text-slate-400 mb-1">Risk Models Active</p>
                 <p className="text-white font-semibold">12 ML Models</p>
               </div>
-              <div className="p-3 bg-slate-800/50 rounded-lg">
+              <div className="p-3 bg-slate-900/60 rounded-lg">
                 <p className="text-xs text-slate-400 mb-1">Coverage</p>
                 <p className="text-white font-semibold">100% of accounts</p>
               </div>
@@ -236,7 +236,7 @@ const MonitoredAccounts = () => {
       </div>
 
       {/* Recent Account Actions */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+      <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
         <h3 className="text-lg font-semibold text-white mb-4">Recent Account Actions</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600">
