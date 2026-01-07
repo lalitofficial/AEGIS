@@ -72,6 +72,43 @@ const Compliance = () => {
     [frameworks]
   );
 
+  const upcomingDeadlines = useMemo(() => {
+    const now = new Date();
+    const items = [];
+
+    frameworks.forEach((framework) => {
+      const auditValue = framework.last_audit || framework.lastAudit;
+      const auditDate = auditValue ? new Date(auditValue) : null;
+      if (!auditDate || Number.isNaN(auditDate.getTime())) {
+        return;
+      }
+      const dueDate = new Date(auditDate);
+      dueDate.setDate(dueDate.getDate() + 90);
+      const daysRemaining = Math.max(1, Math.ceil((dueDate - now) / 86400000));
+      items.push({
+        label: `${framework.name} review`,
+        daysRemaining,
+      });
+    });
+
+    activities
+      .filter((activity) => activity.status !== 'completed')
+      .forEach((activity) => {
+        const activityDate = activity.date ? new Date(activity.date) : null;
+        const daysRemaining = activityDate && !Number.isNaN(activityDate.getTime())
+          ? Math.max(1, Math.ceil((activityDate - now) / 86400000))
+          : 14;
+        items.push({
+          label: activity.activity,
+          daysRemaining,
+        });
+      });
+
+    return items
+      .sort((a, b) => a.daysRemaining - b.daysRemaining)
+      .slice(0, 3);
+  }, [frameworks, activities]);
+
   const formattedFrameworks = useMemo(() => {
     return frameworks.map((framework) => ({
       ...framework,
@@ -237,18 +274,23 @@ const Compliance = () => {
           <div className="flex-1">
             <h4 className="text-lg font-semibold text-white mb-2">Upcoming Compliance Deadlines</h4>
             <ul className="space-y-2 text-sm text-slate-300">
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                SOX Quarterly Report - Due in 15 days
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-cyan-400 rounded-full"></span>
-                AML Training Certification - Due in 30 days
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                GDPR Data Audit - Due in 45 days
-              </li>
+              {upcomingDeadlines.map((deadline) => {
+                let color = 'bg-green-400';
+                if (deadline.daysRemaining <= 15) {
+                  color = 'bg-yellow-400';
+                } else if (deadline.daysRemaining <= 30) {
+                  color = 'bg-cyan-400';
+                }
+                return (
+                  <li key={deadline.label} className="flex items-center gap-2">
+                    <span className={`w-2 h-2 ${color} rounded-full`}></span>
+                    {deadline.label} - Due in {deadline.daysRemaining} days
+                  </li>
+                );
+              })}
+              {upcomingDeadlines.length === 0 && (
+                <li className="text-slate-400">No upcoming deadlines recorded.</li>
+              )}
             </ul>
           </div>
         </div>

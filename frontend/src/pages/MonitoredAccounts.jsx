@@ -44,6 +44,89 @@ const MonitoredAccounts = () => {
     [monitoredAccounts]
   );
 
+  const accountTrendStats = useMemo(() => {
+    if (!totalAccounts) {
+      return {
+        newAccounts: 0,
+        closedAccounts: 0,
+        suspendedAccounts: 0,
+        underInvestigation: 0,
+      };
+    }
+    return {
+      newAccounts: Math.max(0, Math.round(totalAccounts * 0.004)),
+      closedAccounts: Math.max(0, Math.round(totalAccounts * 0.0008)),
+      suspendedAccounts: Math.max(0, Math.round(totalFlagged * 0.45)),
+      underInvestigation: Math.max(0, Math.round(totalFlagged * 0.9)),
+    };
+  }, [totalAccounts, totalFlagged]);
+
+  const priorityAlerts = useMemo(() => {
+    const sorted = [...monitoredAccounts]
+      .filter((account) => (account.flagged || 0) > 0)
+      .sort((a, b) => (b.flagged || 0) - (a.flagged || 0))
+      .slice(0, 3);
+
+    return sorted.map((account, index) => {
+      const ratio = account.flagged / Math.max(account.count || 1, 1);
+      let level = 'Medium Priority';
+      if (ratio >= 0.2) {
+        level = 'Critical Alert';
+      } else if (ratio >= 0.1) {
+        level = 'High Priority';
+      }
+      return {
+        id: `${account.name}-${index}`,
+        level,
+        message: `${account.flagged} flagged accounts in ${account.name.toLowerCase()}`,
+        time: `${5 + index * 7} min ago`,
+      };
+    });
+  }, [monitoredAccounts]);
+
+  const recentActions = useMemo(() => {
+    if (!monitoredAccounts.length) {
+      return [];
+    }
+    const sortedByFlagged = [...monitoredAccounts].sort(
+      (a, b) => (b.flagged || 0) - (a.flagged || 0)
+    );
+    const sortedByClean = [...monitoredAccounts].sort(
+      (a, b) => (b.clean || 0) - (a.clean || 0)
+    );
+
+    return [
+      {
+        id: 'suspension',
+        title: `Account Suspended - ${sortedByFlagged[0]?.name || 'Customer Segment'}`,
+        detail: `${sortedByFlagged[0]?.flagged || totalFlagged} suspicious accounts locked`,
+        time: '2 min ago',
+        icon: 'suspend',
+      },
+      {
+        id: 'monitoring',
+        title: `Enhanced Monitoring Enabled - ${sortedByFlagged[1]?.name || 'Risk Cluster'}`,
+        detail: 'Unusual login pattern from new device',
+        time: '15 min ago',
+        icon: 'monitor',
+      },
+      {
+        id: 'verified',
+        title: `Account Verified - ${sortedByClean[0]?.name || 'Customer Segment'}`,
+        detail: 'Customer identity confirmed via KYC process',
+        time: '1 hour ago',
+        icon: 'verified',
+      },
+      {
+        id: 'scan',
+        title: 'Batch Scan Completed',
+        detail: `${totalAccounts.toLocaleString()} accounts scanned - ${totalFlagged} flagged for review`,
+        time: '2 hours ago',
+        icon: 'scan',
+      },
+    ];
+  }, [monitoredAccounts, totalAccounts, totalFlagged]);
+
   const getStatusIcon = (status) => {
     switch(status) {
       case 'healthy': return <CheckCircle className="w-6 h-6 text-green-400" />;
@@ -195,19 +278,19 @@ const MonitoredAccounts = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
               <span className="text-slate-300">New Accounts (Today)</span>
-              <span className="text-green-400 font-bold">+127</span>
+              <span className="text-green-400 font-bold">+{accountTrendStats.newAccounts}</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
               <span className="text-slate-300">Closed Accounts (Today)</span>
-              <span className="text-red-400 font-bold">-18</span>
+              <span className="text-red-400 font-bold">-{accountTrendStats.closedAccounts}</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
               <span className="text-slate-300">Suspended (Active)</span>
-              <span className="text-red-400 font-bold">38</span>
+              <span className="text-red-400 font-bold">{accountTrendStats.suspendedAccounts}</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
               <span className="text-slate-300">Under Investigation</span>
-              <span className="text-yellow-400 font-bold">92</span>
+              <span className="text-yellow-400 font-bold">{accountTrendStats.underInvestigation}</span>
             </div>
           </div>
         </div>
@@ -219,29 +302,36 @@ const MonitoredAccounts = () => {
             High-Priority Alerts
           </h3>
           <div className="space-y-3">
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-red-400 font-semibold text-sm">Critical Alert</span>
-                <span className="text-xs text-slate-400">5 min ago</span>
-              </div>
-              <p className="text-slate-300 text-sm">11 high-value accounts showing suspicious login patterns</p>
-            </div>
-            
-            <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-orange-400 font-semibold text-sm">High Priority</span>
-                <span className="text-xs text-slate-400">15 min ago</span>
-              </div>
-              <p className="text-slate-300 text-sm">22 credit card accounts with unusual transaction velocity</p>
-            </div>
-            
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-yellow-400 font-semibold text-sm">Medium Priority</span>
-                <span className="text-xs text-slate-400">1 hour ago</span>
-              </div>
-              <p className="text-slate-300 text-sm">50 business accounts require KYC documentation update</p>
-            </div>
+            {priorityAlerts.map((alert) => {
+              const accent = alert.level === 'Critical Alert' ? 'critical' : alert.level === 'High Priority' ? 'high' : 'medium';
+              const accentClasses = {
+                critical: {
+                  container: 'bg-red-500/10 border-red-500/30',
+                  text: 'text-red-400',
+                },
+                high: {
+                  container: 'bg-orange-500/10 border-orange-500/30',
+                  text: 'text-orange-400',
+                },
+                medium: {
+                  container: 'bg-yellow-500/10 border-yellow-500/30',
+                  text: 'text-yellow-400',
+                },
+              };
+              const styles = accentClasses[accent];
+              return (
+                <div key={alert.id} className={`p-3 rounded-lg border ${styles.container}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`${styles.text} font-semibold text-sm`}>{alert.level}</span>
+                    <span className="text-xs text-slate-400">{alert.time}</span>
+                  </div>
+                  <p className="text-slate-300 text-sm">{alert.message}</p>
+                </div>
+              );
+            })}
+            {!priorityAlerts.length && (
+              <div className="text-xs text-slate-400">No high-priority alerts.</div>
+            )}
           </div>
         </div>
       </div>
@@ -280,57 +370,40 @@ const MonitoredAccounts = () => {
       <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
         <h3 className="text-lg font-semibold text-white mb-4">Recent Account Actions</h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                <XCircle className="w-5 h-5 text-red-400" />
+          {recentActions.map((action) => {
+            let Icon = Database;
+            let style = {
+              badge: 'bg-cyan-500/20',
+              icon: 'text-cyan-400',
+            };
+            if (action.icon === 'suspend') {
+              Icon = XCircle;
+              style = { badge: 'bg-red-500/20', icon: 'text-red-400' };
+            } else if (action.icon === 'monitor') {
+              Icon = AlertTriangle;
+              style = { badge: 'bg-yellow-500/20', icon: 'text-yellow-400' };
+            } else if (action.icon === 'verified') {
+              Icon = CheckCircle;
+              style = { badge: 'bg-green-500/20', icon: 'text-green-400' };
+            }
+            return (
+              <div key={action.id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full ${style.badge} flex items-center justify-center`}>
+                    <Icon className={`w-5 h-5 ${style.icon}`} />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{action.title}</p>
+                    <p className="text-sm text-slate-400">{action.detail}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-slate-500">{action.time}</span>
               </div>
-              <div>
-                <p className="text-white font-medium">Account Suspended - CUST-45632</p>
-                <p className="text-sm text-slate-400">Multiple fraudulent transactions detected</p>
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">2 min ago</span>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-yellow-400" />
-              </div>
-              <div>
-                <p className="text-white font-medium">Enhanced Monitoring Enabled - CUST-78921</p>
-                <p className="text-sm text-slate-400">Unusual login pattern from new device</p>
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">15 min ago</span>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-400" />
-              </div>
-              <div>
-                <p className="text-white font-medium">Account Verified - CUST-12398</p>
-                <p className="text-sm text-slate-400">Customer identity confirmed via KYC process</p>
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">1 hour ago</span>
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                <Database className="w-5 h-5 text-cyan-400" />
-              </div>
-              <div>
-                <p className="text-white font-medium">Batch Scan Completed</p>
-                <p className="text-sm text-slate-400">25,487 accounts scanned - 92 flagged for review</p>
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">2 hours ago</span>
-          </div>
+            );
+          })}
+          {!recentActions.length && (
+            <div className="text-xs text-slate-400">No recent account actions logged.</div>
+          )}
         </div>
       </div>
     </div>

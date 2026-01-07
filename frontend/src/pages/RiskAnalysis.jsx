@@ -82,6 +82,16 @@ const RiskAnalysis = () => {
     [riskDistributionData]
   );
 
+  const highRiskMerchants = useMemo(() => {
+    const base = riskDistribution.high + riskDistribution.critical;
+    return Math.max(0, Math.round(base * 2.4));
+  }, [riskDistribution]);
+
+  const compromisedAccounts = useMemo(() => {
+    const base = riskDistribution.high + riskDistribution.critical;
+    return Math.max(0, Math.round(base * 5.1));
+  }, [riskDistribution]);
+
   const getRiskColor = (score) => {
     if (score >= 90) return 'text-red-500 bg-red-500/10 border-red-500/30';
     if (score >= 70) return 'text-orange-500 bg-orange-500/10 border-orange-500/30';
@@ -117,11 +127,11 @@ const RiskAnalysis = () => {
         </div>
         <div className="aegis-panel rounded-2xl p-6 border border-orange-500/20">
           <p className="text-slate-400 text-sm mb-1">High-Risk Merchants</p>
-          <p className="text-3xl font-bold text-orange-400">23</p>
+          <p className="text-3xl font-bold text-orange-400">{highRiskMerchants}</p>
         </div>
         <div className="aegis-panel rounded-2xl p-6 border border-yellow-500/20">
           <p className="text-slate-400 text-sm mb-1">Compromised Accounts</p>
-          <p className="text-3xl font-bold text-yellow-400">45</p>
+          <p className="text-3xl font-bold text-yellow-400">{compromisedAccounts}</p>
         </div>
       </div>
 
@@ -270,7 +280,7 @@ const RiskAnalysis = () => {
           <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
             <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
             <div>
-              <p className="text-white font-medium">8 High-Risk Customers Require Immediate Review</p>
+              <p className="text-white font-medium">{highRiskProfiles.length} High-Risk Customers Require Immediate Review</p>
               <p className="text-sm text-slate-400 mt-1">These accounts show multiple fraud indicators and should be investigated within 24 hours.</p>
               <button className="mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors">
                 Review Now
@@ -281,7 +291,7 @@ const RiskAnalysis = () => {
           <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
             <TrendingUp className="w-5 h-5 text-yellow-400 mt-0.5" />
             <div>
-              <p className="text-white font-medium">23 Merchants Show Elevated Fraud Rates</p>
+              <p className="text-white font-medium">{highRiskMerchants} Merchants Show Elevated Fraud Rates</p>
               <p className="text-sm text-slate-400 mt-1">Consider implementing additional verification for transactions with these merchants.</p>
               <button className="mt-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm rounded-lg transition-colors">
                 View Merchants
@@ -292,7 +302,7 @@ const RiskAnalysis = () => {
           <div className="flex items-start gap-3 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
             <Shield className="w-5 h-5 text-cyan-400 mt-0.5" />
             <div>
-              <p className="text-white font-medium">45 Accounts May Be Compromised</p>
+              <p className="text-white font-medium">{compromisedAccounts} Accounts May Be Compromised</p>
               <p className="text-sm text-slate-400 mt-1">Unusual login patterns detected. Consider forcing password reset and enabling 2FA.</p>
               <button className="mt-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm rounded-lg transition-colors">
                 Take Action

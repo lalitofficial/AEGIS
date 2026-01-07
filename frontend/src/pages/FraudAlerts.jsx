@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Shield, Activity, Search, ArrowUpRight, CheckCircle2, XCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import FraudCard from '../components/FraudCard';
-import { fraudTrendData, fraudTypeDistribution as mockFraudTypeDistribution, recentFraudAlerts, triageQueue } from '../data/mockData';
+import { fraudTrendData, fraudTypeDistribution as mockFraudTypeDistribution, recentFraudAlerts } from '../data/mockData';
 import { dashboardService, fraudService } from '../services/api';
 import GraphView from '../components/GraphView'; // <-- NEW IMPORT
 import { usePresentationMode } from '../utils/presentationMode';
@@ -60,7 +60,7 @@ const FraudAlerts = () => {
     }));
   }, [alerts]);
 
-  const { activeInvestigations, blockedCount, pendingCount } = useMemo(() => {
+  const { activeInvestigations, blockedCount, pendingCount, successRate } = useMemo(() => {
     let investigations = 0;
     let blocked = 0;
     let pending = 0;
@@ -69,7 +69,45 @@ const FraudAlerts = () => {
       if (alert.status === 'Blocked') blocked += 1;
       if (alert.status === 'Pending Review') pending += 1;
     });
-    return { activeInvestigations: investigations, blockedCount: blocked, pendingCount: pending };
+    const total = alerts.length;
+    const rate = total ? ((blocked / total) * 100).toFixed(1) : '0.0';
+    return {
+      activeInvestigations: investigations,
+      blockedCount: blocked,
+      pendingCount: pending,
+      successRate: rate,
+    };
+  }, [alerts]);
+
+  const formatCurrency = (amount) => {
+    if (typeof amount !== 'number') {
+      return '--';
+    }
+    return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+  };
+
+  const triageItems = useMemo(() => {
+    const sorted = [...alerts].sort((a, b) => {
+      const scoreA = a.risk_score ?? a.riskScore ?? 0;
+      const scoreB = b.risk_score ?? b.riskScore ?? 0;
+      return scoreB - scoreA;
+    });
+
+    return sorted.slice(0, 4).map((alert, index) => {
+      const score = alert.risk_score ?? alert.riskScore ?? 0;
+      const etaMinutes = Math.max(8, Math.round(45 - score / 3));
+      let status = 'Review';
+      if (alert.status === 'Blocked') status = 'Blocked';
+      if (alert.status === 'Under Investigation') status = 'Investigate';
+      return {
+        id: alert.id || index,
+        title: `${alert.type || 'Fraud Alert'} · ${alert.transaction_id || alert.transactionId || 'N/A'}`,
+        status,
+        owner: alert.customer_name || alert.customer || 'Ops Team',
+        eta: `${etaMinutes}m`,
+        amount: formatCurrency(alert.amount),
+      };
+    });
   }, [alerts]);
   const getQueueStatus = (status) => {
     switch (status) {
@@ -106,7 +144,7 @@ const FraudAlerts = () => {
             <span className="text-slate-400">Blocked Today</span>
           </div>
           <p className="text-3xl font-bold text-white">{blockedCount.toLocaleString()}</p>
-          <p className="text-sm text-slate-500 mt-1">98.6% success rate</p>
+          <p className="text-sm text-slate-500 mt-1">{successRate}% success rate</p>
         </div>
 
         <div className="aegis-panel rounded-2xl p-6 border border-amber-500/20">
@@ -160,7 +198,7 @@ const FraudAlerts = () => {
             </button>
           </div>
           <div className="space-y-3">
-            {triageQueue.map((item) => (
+            {triageItems.map((item) => (
               <div key={item.id} className="bg-slate-900/60 border border-slate-800/70 rounded-xl p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-white">{item.title}</p>
