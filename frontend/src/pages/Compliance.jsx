@@ -31,7 +31,7 @@ const Compliance = () => {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
           <div className="flex items-center gap-3 mb-2">
             <FileText className="w-6 h-6 text-cyan-400" />
             <span className="text-slate-400">Frameworks Monitored</span>
@@ -39,7 +39,7 @@ const Compliance = () => {
           <p className="text-3xl font-bold text-white">{complianceFrameworks.length}</p>
         </div>
 
-        <div className="bg-slate-800 rounded-lg p-6 border border-green-500/20">
+        <div className="aegis-panel rounded-2xl p-6 border border-green-500/20">
           <div className="flex items-center gap-3 mb-2">
             <CheckCircle className="w-6 h-6 text-green-400" />
             <span className="text-slate-400">Compliant</span>
@@ -47,7 +47,7 @@ const Compliance = () => {
           <p className="text-3xl font-bold text-green-400">4</p>
         </div>
 
-        <div className="bg-slate-800 rounded-lg p-6 border border-yellow-500/20">
+        <div className="aegis-panel rounded-2xl p-6 border border-yellow-500/20">
           <div className="flex items-center gap-3 mb-2">
             <AlertTriangle className="w-6 h-6 text-yellow-400" />
             <span className="text-slate-400">Needs Review</span>
@@ -57,7 +57,7 @@ const Compliance = () => {
       </div>
 
       {/* Compliance Scores Chart */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+      <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
         <h3 className="text-lg font-semibold text-white mb-4">Compliance Framework Scores</h3>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={complianceFrameworks} layout="vertical">
@@ -80,7 +80,7 @@ const Compliance = () => {
       {/* Framework Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {complianceFrameworks.map((framework) => (
-          <div key={framework.name} className="bg-slate-800 rounded-lg p-6 border border-slate-700 hover:border-cyan-500/50 transition-all">
+          <div key={framework.name} className="aegis-panel rounded-2xl p-6 border border-slate-800/70 hover:border-cyan-500/50 transition-all">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-cyan-500/10 rounded-lg">
@@ -130,7 +130,7 @@ const Compliance = () => {
       </div>
 
       {/* Compliance Activities */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+      <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
         <h3 className="text-lg font-semibold text-white mb-4">Recent Compliance Activities</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
@@ -191,7 +191,7 @@ const Compliance = () => {
       </div>
 
       {/* Regulatory Requirements Alert */}
-      <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg p-6">
+      <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-6">
         <div className="flex items-start gap-4">
           <div className="p-3 bg-cyan-500/20 rounded-lg">
             <FileText className="w-6 h-6 text-cyan-400" />
