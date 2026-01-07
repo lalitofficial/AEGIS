@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Shield, Activity, Search, ArrowUpRight, CheckCircle2, XCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import FraudCard from '../components/FraudCard';
-import { triageQueue } from '../data/mockData';
+import { fraudTrendData, fraudTypeDistribution as mockFraudTypeDistribution, recentFraudAlerts, triageQueue } from '../data/mockData';
 import { dashboardService, fraudService } from '../services/api';
 import GraphView from '../components/GraphView'; // <-- NEW IMPORT
+import { usePresentationMode } from '../utils/presentationMode';
 
 const FraudAlerts = () => {
+  const [presentationMode] = usePresentationMode();
   const [alerts, setAlerts] = useState([]);
   const [fraudTrends, setFraudTrends] = useState([]);
   const [fraudTypeDistribution, setFraudTypeDistribution] = useState([]);
@@ -15,6 +17,16 @@ const FraudAlerts = () => {
     let isMounted = true;
 
     const loadData = async () => {
+      if (presentationMode) {
+        if (!isMounted) {
+          return;
+        }
+        setAlerts(recentFraudAlerts);
+        setFraudTrends(fraudTrendData);
+        setFraudTypeDistribution(mockFraudTypeDistribution);
+        return;
+      }
+
       const [alertsData, trendsData, distributionData] = await Promise.all([
         fraudService.getRecentAlerts(50),
         dashboardService.getFraudTrends(),
@@ -31,7 +43,7 @@ const FraudAlerts = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [presentationMode]);
 
   const formattedAlerts = useMemo(() => {
     return alerts.map((alert) => ({

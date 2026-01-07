@@ -1,14 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Database, CreditCard, Briefcase, Smartphone, TrendingUp, CheckCircle, AlertTriangle, XCircle, DollarSign } from 'lucide-react';
 import { accountsService } from '../services/api';
+import { monitoredAccounts as mockMonitoredAccounts } from '../data/mockData';
+import { usePresentationMode } from '../utils/presentationMode';
 
 const MonitoredAccounts = () => {
+  const [presentationMode] = usePresentationMode();
   const [monitoredAccounts, setMonitoredAccounts] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadAccounts = async () => {
+      if (presentationMode) {
+        if (!isMounted) {
+          return;
+        }
+        setMonitoredAccounts(mockMonitoredAccounts);
+        return;
+      }
+
       const data = await accountsService.getMonitoredAccounts();
       if (!isMounted) return;
       setMonitoredAccounts(data || []);
@@ -18,7 +29,7 @@ const MonitoredAccounts = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [presentationMode]);
 
   const totalAccounts = useMemo(
     () => monitoredAccounts.reduce((sum, account) => sum + (account.count || 0), 0),

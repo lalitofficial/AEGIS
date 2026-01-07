@@ -4,10 +4,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import MetricCard from '../components/MetricCard';
 import FraudCard from '../components/FraudCard';
 import BackendTest from '../components/BackendTest';
-import { liveSignals, modelHealth, responsePlaybooks } from '../data/mockData';
+import { dashboardMetrics, fraudDetectionPosture, fraudTrendData, liveSignals, modelHealth, monitoredAccounts, recentFraudAlerts, responsePlaybooks } from '../data/mockData';
 import { accountsService, dashboardService, fraudService } from '../services/api';
+import { usePresentationMode } from '../utils/presentationMode';
 
 const Dashboard = () => {
+  const [presentationMode, setPresentationMode] = usePresentationMode();
   const [metrics, setMetrics] = useState(null);
   const [fraudTrends, setFraudTrends] = useState([]);
   const [detectionPosture, setDetectionPosture] = useState([]);
@@ -18,6 +20,18 @@ const Dashboard = () => {
     let isMounted = true;
 
     const loadData = async () => {
+      if (presentationMode) {
+        if (!isMounted) {
+          return;
+        }
+        setMetrics(dashboardMetrics);
+        setFraudTrends(fraudTrendData);
+        setDetectionPosture(fraudDetectionPosture);
+        setRecentAlerts(recentFraudAlerts);
+        setMonitoredSummary(monitoredAccounts);
+        return;
+      }
+
       const [
         metricsData,
         trendsData,
@@ -44,7 +58,7 @@ const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [presentationMode]);
 
   const riskIndex = useMemo(() => {
     if (!detectionPosture.length) return 86;
@@ -109,6 +123,16 @@ const Dashboard = () => {
               <div className="flex items-center gap-3">
                 <button className="px-4 py-2 rounded-lg bg-slate-900/70 border border-slate-800 text-slate-200 text-sm">
                   Generate Brief
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-lg border text-sm font-semibold ${
+                    presentationMode
+                      ? 'bg-amber-500/90 border-amber-400 text-slate-900'
+                      : 'bg-slate-900/70 border-slate-800 text-slate-200'
+                  }`}
+                  onClick={() => setPresentationMode(!presentationMode)}
+                >
+                  {presentationMode ? 'Presentation Mode: On' : 'Presentation Mode: Off'}
                 </button>
                 <button className="px-4 py-2 rounded-lg bg-cyan-500/90 hover:bg-cyan-500 text-white text-sm font-semibold flex items-center gap-2">
                   <Zap className="w-4 h-4" />

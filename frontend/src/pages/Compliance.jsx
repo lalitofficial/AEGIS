@@ -2,15 +2,51 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FileText, CheckCircle, AlertTriangle, Clock, Shield } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { complianceService } from '../services/api';
+import { complianceFrameworks as mockFrameworks } from '../data/mockData';
+import { usePresentationMode } from '../utils/presentationMode';
 
 const Compliance = () => {
+  const [presentationMode] = usePresentationMode();
   const [frameworks, setFrameworks] = useState([]);
   const [activities, setActivities] = useState([]);
+
+  const mockActivities = [
+    {
+      id: 1,
+      activity: 'KYC Documentation Completed',
+      description: 'All new customer verifications processed - Dec 1, 2024',
+      status: 'completed',
+      date: '2024-12-01',
+    },
+    {
+      id: 2,
+      activity: 'AML Transaction Monitoring Active',
+      description: 'Suspicious activity reports filed for Nov 2024',
+      status: 'completed',
+      date: '2024-11-28',
+    },
+    {
+      id: 3,
+      activity: 'SOX Audit Review Required',
+      description: 'Financial controls need quarterly assessment',
+      status: 'pending',
+      date: '2024-11-20',
+    },
+  ];
 
   useEffect(() => {
     let isMounted = true;
 
     const loadData = async () => {
+      if (presentationMode) {
+        if (!isMounted) {
+          return;
+        }
+        setFrameworks(mockFrameworks);
+        setActivities(mockActivities);
+        return;
+      }
+
       const [frameworkData, activityData] = await Promise.all([
         complianceService.getFrameworks(),
         complianceService.getActivities(),
@@ -25,7 +61,7 @@ const Compliance = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [presentationMode]);
 
   const compliantCount = useMemo(
     () => frameworks.filter((framework) => framework.status === 'Compliant').length,

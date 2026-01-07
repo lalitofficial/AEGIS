@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { dashboardMetrics } from '../data/mockData';
 import { dashboardService } from '../services/api';
+import { usePresentationMode } from '../utils/presentationMode';
 
 const BackendTest = () => {
+  const [presentationMode] = usePresentationMode();
   const [metrics, setMetrics] = useState(null);
   const [status, setStatus] = useState('Connecting to API...');
 
   useEffect(() => {
     const testConnection = async () => {
+      if (presentationMode) {
+        setMetrics(dashboardMetrics);
+        setStatus('Presentation mode active');
+        return;
+      }
+
       try {
         const data = await dashboardService.getMetrics();
         if (data) {
@@ -21,7 +30,7 @@ const BackendTest = () => {
     };
 
     testConnection();
-  }, []);
+  }, [presentationMode]);
 
   return (
     <div className="aegis-panel-soft rounded-2xl p-5 border border-slate-800/70">

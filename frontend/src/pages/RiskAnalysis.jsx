@@ -2,8 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Shield, AlertCircle, Users, TrendingUp } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { riskService } from '../services/api';
+import { customerRiskDetails } from '../data/mockData';
+import { usePresentationMode } from '../utils/presentationMode';
 
 const RiskAnalysis = () => {
+  const [presentationMode] = usePresentationMode();
   const [riskDistribution, setRiskDistribution] = useState({ critical: 0, high: 0, medium: 0, low: 0 });
   const [highRiskProfiles, setHighRiskProfiles] = useState([]);
 
@@ -11,6 +14,46 @@ const RiskAnalysis = () => {
     let isMounted = true;
 
     const loadData = async () => {
+      if (presentationMode) {
+        if (!isMounted) {
+          return;
+        }
+        const distribution = customerRiskDetails.reduce(
+          (acc, customer) => {
+            switch (customer.status) {
+              case 'Restricted':
+                acc.critical += 1;
+                break;
+              case 'Under Review':
+                acc.high += 1;
+                break;
+              case 'Monitoring':
+                acc.medium += 1;
+                break;
+              default:
+                acc.low += 1;
+            }
+            return acc;
+          },
+          { critical: 0, high: 0, medium: 0, low: 0 }
+        );
+
+        const mappedProfiles = customerRiskDetails.map((customer) => ({
+          id: customer.id,
+          customer_id: customer.customerId,
+          customer_name: customer.name,
+          risk_score: customer.riskScore,
+          risk_factors: customer.riskFactors,
+          status: customer.status,
+          account_age: customer.accountAge,
+          last_activity: customer.lastActivity,
+        }));
+
+        setRiskDistribution(distribution);
+        setHighRiskProfiles(mappedProfiles);
+        return;
+      }
+
       const [distributionData, highRiskData] = await Promise.all([
         riskService.getRiskDistribution(),
         riskService.getHighRiskProfiles(),
@@ -25,7 +68,7 @@ const RiskAnalysis = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [presentationMode]);
 
   const riskDistributionData = useMemo(() => ([
     { category: 'Critical', count: riskDistribution.critical, color: '#ef4444' },

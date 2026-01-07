@@ -2,16 +2,27 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Network } from 'vis-network/standalone';
 import { Loader2 } from 'lucide-react';
 import { graphService } from '../services/api';
+import { fraudGraphData } from '../data/mockData';
+import { usePresentationMode } from '../utils/presentationMode';
 
 const GraphView = () => {
     const networkRef = useRef(null);
     const [isLoading, setIsLoading] = useState(true);
     const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
+    const [presentationMode] = usePresentationMode();
 
     useEffect(() => {
         let isMounted = true;
 
         const loadGraph = async () => {
+            if (presentationMode) {
+                if (!isMounted) {
+                    return;
+                }
+                setGraphData(fraudGraphData);
+                return;
+            }
+
             const data = await graphService.getGraphData();
             if (!isMounted) return;
             setGraphData(data || { nodes: [], edges: [] });
@@ -21,7 +32,7 @@ const GraphView = () => {
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [presentationMode]);
 
     useEffect(() => {
         if (!networkRef.current) return;
