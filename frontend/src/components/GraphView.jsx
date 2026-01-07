@@ -113,25 +113,31 @@ const GraphView = () => {
     }, []);
 
     return (
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 h-[700px] flex flex-col relative">
-            <h3 className="text-lg font-semibold text-white mb-4">
-                Real-Time Fraud Ring Detection (Graph AI)
-            </h3>
+        <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70 h-[700px] flex flex-col relative">
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Graph Intelligence</p>
+                    <h3 className="text-lg font-semibold text-white">
+                        Real-Time Fraud Ring Detection
+                    </h3>
+                </div>
+                <span className="text-xs text-slate-400">Auto-clustered in 2.6s</span>
+            </div>
             
             {/* Legend */}
-            <div className="absolute top-4 right-4 bg-slate-700/80 p-3 rounded-lg z-20 shadow-lg">
-                <p className="text-xs font-bold text-white mb-1">Cluster Status & Size Legend</p>
+            <div className="absolute top-4 right-4 bg-slate-900/90 p-3 rounded-lg z-20 border border-slate-700/70 shadow-lg">
+                <p className="text-xs font-semibold text-white mb-2">Cluster Legend</p>
                 <div className="text-xs text-slate-300 space-y-1">
-                    <p>🔴 **DETECTED**: Confirmed Fraud Ring (Largest Nodes)</p>
-                    <p>🟠 **INVESTIGATION**: High Risk Anomaly (Large/Medium Nodes)</p>
-                    <p>🔵 **SUSPICIOUS**: Monitoring Required (Small Nodes)</p>
-                    <p>🟢 **SAFE** (Neon Green): Normal Activity (Smallest Nodes)</p>
+                    <p>Detected: Confirmed fraud ring</p>
+                    <p>Investigation: High-risk anomaly</p>
+                    <p>Suspicious: Monitoring required</p>
+                    <p>Safe: Normal baseline</p>
                 </div>
             </div>
             
             {/* Loading Indicator */}
             {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/70 z-10 rounded-lg">
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 z-10 rounded-lg">
                     <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
                     <span className="ml-3 text-lg text-cyan-400">Optimizing Graph Topology...</span>
                 </div>
@@ -147,9 +153,9 @@ const GraphView = () => {
             </div>
             
             {/* Bottom Insight */}
-            <div className="mt-4 p-3 bg-slate-700 rounded-lg">
+            <div className="mt-4 p-3 bg-slate-900/70 rounded-lg border border-slate-800/70">
                 <p className="text-sm text-slate-300">
-                    This visualization highlights correlated training samples by showing the hidden connections between entities. The **Graph AI** approach reveals the **Botnet Cluster** where multiple small nodes (accounts/IPs) orbit a large red node (Stolen Card), a pattern invisible to conventional rule-based systems.
+                    Graph AI reveals correlated entities and shared infrastructure. Dense red clusters highlight confirmed fraud rings, while amber edges show emerging risk that benefits from early intervention.
                 </p>
             </div>
         </div>
