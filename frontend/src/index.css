@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,17 +10,130 @@
   box-sizing: border-box;
 }
 
+:root {
+  --aegis-ink: #0b1020;
+  --aegis-panel: #0f172a;
+  --aegis-panel-strong: #0b1220;
+  --aegis-border: #1e293b;
+  --aegis-accent: #22d3ee;
+  --aegis-accent-2: #f59e0b;
+  --aegis-glow: rgba(34, 211, 238, 0.18);
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #0f172a;
+  background-color: var(--aegis-ink);
+  color: #e2e8f0;
 }
 
 #root {
   min-height: 100vh;
+}
+
+.aegis-shell {
+  position: relative;
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(14, 116, 144, 0.18), transparent),
+    radial-gradient(900px 500px at 90% 10%, rgba(234, 179, 8, 0.12), transparent),
+    radial-gradient(800px 600px at 50% 100%, rgba(14, 165, 233, 0.08), transparent);
+  overflow: hidden;
+}
+
+.aegis-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.aegis-orb {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 999px;
+  filter: blur(0px);
+  opacity: 0.3;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.4), transparent 70%);
+  animation: float 8s ease-in-out infinite;
+}
+
+.aegis-orb.orb-1 {
+  top: -120px;
+  left: -120px;
+}
+
+.aegis-orb.orb-2 {
+  right: -160px;
+  top: 120px;
+  background: radial-gradient(circle, rgba(234, 179, 8, 0.35), transparent 70%);
+  animation-delay: -2s;
+}
+
+.aegis-orb.orb-3 {
+  bottom: -200px;
+  left: 40%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25), transparent 70%);
+  animation-delay: -4s;
+}
+
+.aegis-panel {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.85), rgba(8, 13, 24, 0.9));
+  border: 1px solid var(--aegis-border);
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.45);
+  backdrop-filter: blur(12px);
+}
+
+.aegis-panel-soft {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.aegis-chip {
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  background: rgba(8, 145, 178, 0.12);
+  color: #5eead4;
+}
+
+.aegis-glow {
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2), 0 12px 40px var(--aegis-glow);
+}
+
+.aegis-text-glow {
+  text-shadow: 0 0 18px rgba(34, 211, 238, 0.4);
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(12px);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aegis-fade {
+  animation: fade-up 0.6s ease both;
+}
+
+.aegis-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
 /* Custom Scrollbar */
