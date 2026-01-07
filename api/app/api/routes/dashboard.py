@@ -4,15 +4,35 @@ from sqlalchemy import func
 from app.database import get_db
 from app.models.fraud import FraudAlert, RiskProfile
 from app.models.transaction import Transaction, Account
+from app.models.compliance import DetectionPosture
 from datetime import datetime, timedelta
 from app.utils.logger import logger
+from app.utils.cache import get_cached, set_cached
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+
+def _map_fraud_type(fraud_type: str) -> str:
+    if not fraud_type:
+        return "cardFraud"
+    normalized = fraud_type.lower()
+    if "account" in normalized or "takeover" in normalized or "ato" in normalized:
+        return "accountTakeover"
+    if "identity" in normalized or "id theft" in normalized:
+        return "identityTheft"
+    if "payment" in normalized or "wire" in normalized or "refund" in normalized or "chargeback" in normalized:
+        return "paymentFraud"
+    if "card" in normalized or "credit" in normalized or "debit" in normalized:
+        return "cardFraud"
+    return "cardFraud"
 
 @router.get("/metrics")
 async def get_dashboard_metrics(db: Session = Depends(get_db)):
     """Get dashboard metrics"""
     try:
+        cached = get_cached("dashboard_metrics")
+        if cached:
+            return cached
+
         # Calculate metrics
         total_transactions = db.query(Transaction).count()
         suspicious_transactions = db.query(FraudAlert)\
@@ -25,15 +45,20 @@ async def get_dashboard_metrics(db: Session = Depends(get_db)):
         # Calculate fraud detection rate
         fraud_detection_rate = (confirmed_frauds / total_transactions * 100) if total_transactions > 0 else 0
         
-        # Calculate false positive rate (approximation)
-        false_positive_rate = 2.3  # This would need more sophisticated calculation
+        false_positive_rate = 0.0
+        if suspicious_transactions > 0:
+            false_positive_rate = round(
+                ((suspicious_transactions - confirmed_frauds) / suspicious_transactions) * 100, 1
+            )
         
-        return {
+        metrics = {
             "fraudDetectionRate": round(fraud_detection_rate, 1),
             "suspiciousTransactions": suspicious_transactions,
             "confirmedFrauds": confirmed_frauds,
             "falsePositiveRate": false_positive_rate
         }
+        set_cached("dashboard_metrics", metrics)
+        return metrics
     except Exception as e:
         logger.error(f"Error fetching dashboard metrics: {e}")
         raise HTTPException(
@@ -45,6 +70,10 @@ async def get_dashboard_metrics(db: Session = Depends(get_db)):
 async def get_fraud_trends(db: Session = Depends(get_db)):
     """Get fraud trends for the last 24 hours"""
     try:
+        cached = get_cached("fraud_trends")
+        if cached:
+            return cached
+
         now = datetime.utcnow()
         time_ranges = []
         
@@ -52,16 +81,22 @@ async def get_fraud_trends(db: Session = Depends(get_db)):
             start_time = now - timedelta(hours=(7-i)*4)
             end_time = now - timedelta(hours=(6-i)*4)
             
-            fraud_count = db.query(FraudAlert)\
+            alerts = db.query(FraudAlert)\
                 .filter(FraudAlert.created_at >= start_time)\
                 .filter(FraudAlert.created_at < end_time)\
-                .count()
-                
-            blocked_count = db.query(FraudAlert)\
-                .filter(FraudAlert.created_at >= start_time)\
-                .filter(FraudAlert.created_at < end_time)\
-                .filter(FraudAlert.status == 'Blocked')\
-                .count()
+                .all()
+
+            fraud_count = len(alerts)
+            blocked_count = sum(1 for alert in alerts if alert.status == 'Blocked')
+            type_counts = {
+                "cardFraud": 0,
+                "accountTakeover": 0,
+                "identityTheft": 0,
+                "paymentFraud": 0
+            }
+            for alert in alerts:
+                category = _map_fraud_type(alert.type)
+                type_counts[category] += 1
                 
             time_label = f"{start_time.strftime('%H:00')}"
             
@@ -69,12 +104,13 @@ async def get_fraud_trends(db: Session = Depends(get_db)):
                 "time": time_label,
                 "total": fraud_count,
                 "blocked": blocked_count,
-                "cardFraud": int(fraud_count * 0.4),
-                "accountTakeover": int(fraud_count * 0.3),
-                "identityTheft": int(fraud_count * 0.2),
-                "paymentFraud": int(fraud_count * 0.1)
+                "cardFraud": type_counts["cardFraud"],
+                "accountTakeover": type_counts["accountTakeover"],
+                "identityTheft": type_counts["identityTheft"],
+                "paymentFraud": type_counts["paymentFraud"]
             })
             
+        set_cached("fraud_trends", time_ranges)
         return time_ranges
     except Exception as e:
         logger.error(f"Error fetching fraud trends: {e}")
@@ -87,6 +123,10 @@ async def get_fraud_trends(db: Session = Depends(get_db)):
 async def get_fraud_type_distribution(db: Session = Depends(get_db)):
     """Get fraud type distribution"""
     try:
+        cached = get_cached("fraud_distribution")
+        if cached:
+            return cached
+
         # Query fraud alerts grouped by type
         fraud_types = db.query(
             FraudAlert.type,
@@ -113,6 +153,7 @@ async def get_fraud_type_distribution(db: Session = Depends(get_db)):
                 "color": colors.get(fraud_type.type, '#64748b')
             })
             
+        set_cached("fraud_distribution", distribution)
         return distribution
     except Exception as e:
         logger.error(f"Error fetching fraud type distribution: {e}")
@@ -124,11 +165,11 @@ async def get_fraud_type_distribution(db: Session = Depends(get_db)):
 @router.get("/detection-posture")
 async def get_detection_posture(db: Session = Depends(get_db)):
     """Get fraud detection capabilities posture"""
-    return [
-        {"category": "Card Fraud Detection", "score": 94},
-        {"category": "Account Takeover", "score": 88},
-        {"category": "Money Laundering", "score": 91},
-        {"category": "Payment Fraud", "score": 85},
-        {"category": "Identity Theft", "score": 92},
-        {"category": "Wire Fraud", "score": 87}
-    ]
+    cached = get_cached("detection_posture")
+    if cached:
+        return cached
+
+    posture = db.query(DetectionPosture).order_by(DetectionPosture.score.desc()).all()
+    result = [{"category": row.category, "score": row.score} for row in posture]
+    set_cached("detection_posture", result)
+    return result

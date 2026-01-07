@@ -2,15 +2,34 @@ from app.database import SessionLocal, init_db
 # IMPORT ALL MODELS HERE so SQLAlchemy knows about them
 from app.models.fraud import FraudAlert, RiskProfile
 from app.models.transaction import Transaction, Account 
+from app.models.user import User
+from app.models.compliance import ComplianceFramework, ComplianceActivity, DetectionPosture
 from app.services.fraud_detection import FraudDetectionService
 from app.services.risk_analysis import RiskAnalysisService
+from app.utils.security import get_password_hash
 import random
 from datetime import datetime, timedelta
+import os
 
 def seed_database():
     print("🌱 Seeding database with fake data...")
     init_db()
     db = SessionLocal()
+
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@aegis.local")
+    admin_password = os.getenv("ADMIN_PASSWORD", "change-me")
+    admin_user = db.query(User).filter(User.email == admin_email).first()
+    if not admin_user:
+        admin_user = User(
+            email=admin_email,
+            username="admin",
+            full_name="AEGIS Admin",
+            hashed_password=get_password_hash(admin_password),
+            role="admin",
+            is_superuser=True
+        )
+        db.add(admin_user)
+        db.commit()
 
     # 1. Create some fake customers
     customers = [
@@ -19,6 +38,8 @@ def seed_database():
         {"id": "CUST-003", "name": "Amit Kumar", "age": 1200},
         {"id": "CUST-004", "name": "John Doe", "age": 10}, 
     ]
+    customer_last_txn = {}
+    customer_txn_count = {customer["id"]: 0 for customer in customers}
 
     # 2. Generate transactions
     print("Generating transactions...")
@@ -59,6 +80,8 @@ def seed_database():
         )
         db.add(db_transaction)
         db.commit()
+        customer_last_txn[txn_data["customer_id"]] = txn_data["timestamp"]
+        customer_txn_count[txn_data["customer_id"]] += 1
 
         # --- FIX IS HERE ---
         # Convert timestamp to string for JSON serialization in the Alert
@@ -94,6 +117,104 @@ def seed_database():
             print(f"  Error processing {txn_data['transaction_id']}: {e}")
 
     print("✅ Database seeded successfully!")
+
+    if db.query(Account).count() == 0:
+        account_types = ["checking", "savings", "credit_card", "business"]
+        for customer in customers:
+            for index in range(random.randint(1, 2)):
+                account_type = random.choice(account_types)
+                flagged_count = random.randint(0, 3)
+                account = Account(
+                    account_id=f"{customer['id']}-ACC-{index + 1}",
+                    customer_id=customer["id"],
+                    account_type=account_type,
+                    balance=round(random.uniform(1000, 250000), 2),
+                    status="active" if flagged_count == 0 else "review",
+                    is_monitored=True,
+                    last_transaction=customer_last_txn.get(customer["id"]),
+                    transaction_count=customer_txn_count.get(customer["id"], 0),
+                    flagged_count=flagged_count,
+                )
+                db.add(account)
+        db.commit()
+
+    if db.query(ComplianceFramework).count() == 0:
+        frameworks = [
+            ComplianceFramework(
+                name="PCI DSS",
+                score=92,
+                status="Compliant",
+                last_audit=datetime(2024, 11, 15).date(),
+                description="Payment Card Industry Data Security Standard"
+            ),
+            ComplianceFramework(
+                name="AML Compliance",
+                score=88,
+                status="Compliant",
+                last_audit=datetime(2024, 10, 20).date(),
+                description="Anti-Money Laundering"
+            ),
+            ComplianceFramework(
+                name="KYC Requirements",
+                score=95,
+                status="Compliant",
+                last_audit=datetime(2024, 11, 1).date(),
+                description="Know Your Customer"
+            ),
+            ComplianceFramework(
+                name="GDPR",
+                score=90,
+                status="Compliant",
+                last_audit=datetime(2024, 10, 28).date(),
+                description="General Data Protection Regulation"
+            ),
+            ComplianceFramework(
+                name="SOX",
+                score=85,
+                status="Needs Review",
+                last_audit=datetime(2024, 9, 10).date(),
+                description="Sarbanes-Oxley Act"
+            ),
+        ]
+        db.add_all(frameworks)
+        db.commit()
+
+    if db.query(ComplianceActivity).count() == 0:
+        activities = [
+            ComplianceActivity(
+                activity="KYC Documentation Completed",
+                description="All new customer verifications processed - Dec 1, 2024",
+                status="completed",
+                date=datetime(2024, 12, 1).date()
+            ),
+            ComplianceActivity(
+                activity="AML Transaction Monitoring Active",
+                description="Suspicious activity reports filed for Nov 2024",
+                status="completed",
+                date=datetime(2024, 11, 28).date()
+            ),
+            ComplianceActivity(
+                activity="SOX Audit Review Required",
+                description="Financial controls need quarterly assessment",
+                status="pending",
+                date=datetime(2024, 11, 20).date()
+            ),
+        ]
+        db.add_all(activities)
+        db.commit()
+
+    if db.query(DetectionPosture).count() == 0:
+        posture = [
+            DetectionPosture(category="Card Fraud Detection", score=94),
+            DetectionPosture(category="Account Takeover", score=88),
+            DetectionPosture(category="Money Laundering", score=91),
+            DetectionPosture(category="Payment Fraud", score=85),
+            DetectionPosture(category="Identity Theft", score=92),
+            DetectionPosture(category="Wire Fraud", score=87),
+        ]
+        db.add_all(posture)
+        db.commit()
+
     db.close()
 
 if __name__ == "__main__":

@@ -2,8 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.transaction import Account
-from app.services.risk_analysis import RiskAnalysisService
-from typing import List
+from typing import Optional
+from datetime import datetime
+
+def _format_volume(count: int) -> str:
+    if count >= 1_000_000:
+        return f"{count / 1_000_000:.1f}M"
+    if count >= 1_000:
+        return f"{count / 1_000:.1f}K"
+    return str(count)
+
+def _format_last_scan(last_scan: Optional[datetime]) -> str:
+    return last_scan.isoformat() if last_scan else "N/A"
 
 router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
@@ -24,8 +34,8 @@ async def get_monitored_accounts(db: Session = Depends(get_db)):
                     "clean": 0,
                     "flagged": 0,
                     "status": "healthy",
-                    "lastScan": "Recently",
-                    "transactionVolume": "0M"
+                    "lastScan": None,
+                    "transactionVolume": 0,
                 }
             
             account_summary[acc_type]["count"] += 1
@@ -33,6 +43,22 @@ async def get_monitored_accounts(db: Session = Depends(get_db)):
                 account_summary[acc_type]["clean"] += 1
             else:
                 account_summary[acc_type]["flagged"] += account.flagged_count
+            account_summary[acc_type]["transactionVolume"] += account.transaction_count or 0
+            if account.last_transaction:
+                existing_last_scan = account_summary[acc_type]["lastScan"]
+                if not existing_last_scan or account.last_transaction > existing_last_scan:
+                    account_summary[acc_type]["lastScan"] = account.last_transaction
+
+        for summary in account_summary.values():
+            flagged_ratio = summary["flagged"] / max(summary["count"], 1)
+            if summary["flagged"] >= 10 or flagged_ratio >= 0.25:
+                summary["status"] = "critical"
+            elif summary["flagged"] > 0:
+                summary["status"] = "watch"
+            else:
+                summary["status"] = "healthy"
+            summary["lastScan"] = _format_last_scan(summary["lastScan"])
+            summary["transactionVolume"] = _format_volume(summary["transactionVolume"])
                 
         return list(account_summary.values())
     except Exception as e:

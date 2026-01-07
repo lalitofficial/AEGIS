@@ -12,3 +12,5 @@ scikit-learn
 joblib
 torch
 networkx
+python-jose[cryptography]
+passlib[bcrypt]
