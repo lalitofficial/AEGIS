@@ -20,13 +20,13 @@ const FraudCard = ({ fraud }) => {
   };
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-cyan-500/50 transition-all">
+    <div className="aegis-panel-soft rounded-2xl p-4 border border-slate-800/80 hover:border-cyan-500/40 transition-all">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-red-400" />
           <div>
             <span className="font-semibold text-white">{fraud.type}</span>
-            <p className="text-xs text-slate-400 font-mono">{fraud.transactionId}</p>
+            <p className="text-xs text-slate-400 aegis-mono">{fraud.transactionId}</p>
           </div>
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getRiskColor(fraud.riskScore)}`}>
@@ -37,9 +37,8 @@ const FraudCard = ({ fraud }) => {
       <div className="space-y-2 text-sm mb-3">
         <div className="flex justify-between items-center">
           <span className="text-slate-400">Amount:</span>
-          <span className="text-green-400 font-bold flex items-center gap-1">
+          <span className="text-emerald-300 font-bold flex items-center gap-1">
             <IndianRupee className="w-4 h-4" />
-            <span className="text-base"></span>
             {fraud.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </span>
         </div>
@@ -50,7 +49,7 @@ const FraudCard = ({ fraud }) => {
         </div>
         <div className="flex justify-between">
           <span className="text-slate-400">Customer ID:</span>
-          <span className="text-slate-300 font-mono text-xs">{fraud.customerId}</span>
+          <span className="text-slate-300 aegis-mono text-xs">{fraud.customerId}</span>
         </div>
       </div>
 
