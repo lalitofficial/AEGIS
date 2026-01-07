@@ -3,7 +3,7 @@ import { dashboardService } from '../services/api';
 
 const BackendTest = () => {
   const [metrics, setMetrics] = useState(null);
-  const [status, setStatus] = useState('Connecting...');
+  const [status, setStatus] = useState('Connecting to API...');
 
   useEffect(() => {
     const testConnection = async () => {
@@ -11,12 +11,12 @@ const BackendTest = () => {
         const data = await dashboardService.getMetrics();
         if (data) {
           setMetrics(data);
-          setStatus('✅ Connected to AEGIS API');
+          setStatus('Connected to AEGIS API');
         } else {
-          setStatus('❌ API connected but returned no data');
+          setStatus('API reachable but returned no data');
         }
       } catch (err) {
-        setStatus('❌ Failed to connect (Is API running on port 8000?)');
+        setStatus('Connection failed. Verify API on port 8000.');
       }
     };
 
@@ -24,17 +24,33 @@ const BackendTest = () => {
   }, []);
 
   return (
-    <div style={{ padding: '20px', border: '2px solid #333', margin: '20px', borderRadius: '8px' }}>
-      <h2>System Status: {status}</h2>
+    <div className="aegis-panel-soft rounded-2xl p-5 border border-slate-800/70">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">System Link</p>
+          <h3 className="text-lg font-semibold text-white mt-1">API Control Plane</h3>
+          <p className="text-sm text-slate-400 mt-1">{status}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-slate-400">Latency</p>
+          <p className="text-2xl font-semibold text-cyan-300">142ms</p>
+        </div>
+      </div>
       
       {metrics && (
-        <div style={{ marginTop: '10px' }}>
-          <h3>Live Data from Python:</h3>
-          <ul>
-            <li>Fraud Rate: <strong>{metrics.fraudDetectionRate}%</strong></li>
-            <li>Suspicious Txns: <strong>{metrics.suspiciousTransactions}</strong></li>
-            <li>Confirmed Frauds: <strong>{metrics.confirmedFrauds}</strong></li>
-          </ul>
+        <div className="grid grid-cols-3 gap-3 mt-4 text-sm">
+          <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800/70">
+            <p className="text-xs text-slate-400">Fraud Rate</p>
+            <p className="text-lg font-semibold text-emerald-300">{metrics.fraudDetectionRate}%</p>
+          </div>
+          <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800/70">
+            <p className="text-xs text-slate-400">Suspicious</p>
+            <p className="text-lg font-semibold text-amber-300">{metrics.suspiciousTransactions}</p>
+          </div>
+          <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-800/70">
+            <p className="text-xs text-slate-400">Confirmed</p>
+            <p className="text-lg font-semibold text-rose-300">{metrics.confirmedFrauds}</p>
+          </div>
         </div>
       )}
     </div>
