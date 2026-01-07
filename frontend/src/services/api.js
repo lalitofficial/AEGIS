@@ -50,6 +50,17 @@ export const dashboardService = {
       return null;
     }
   },
+  getMetricsWithLatency: async () => {
+    const startTime = performance.now();
+    try {
+      const response = await api.get('/dashboard/metrics');
+      const latencyMs = Math.round(performance.now() - startTime);
+      return { data: response.data, latencyMs };
+    } catch (error) {
+      console.error("Error fetching metrics:", error);
+      return { data: null, latencyMs: null };
+    }
+  },
   getFraudTrends: async () => {
     try {
       const response = await api.get('/dashboard/fraud-trends');

@@ -7,25 +7,29 @@ const BackendTest = () => {
   const [presentationMode] = usePresentationMode();
   const [metrics, setMetrics] = useState(null);
   const [status, setStatus] = useState('Connecting to API...');
+  const [latencyMs, setLatencyMs] = useState(null);
 
   useEffect(() => {
     const testConnection = async () => {
       if (presentationMode) {
         setMetrics(dashboardMetrics);
         setStatus('Presentation mode active');
+        setLatencyMs(Math.floor(120 + Math.random() * 60));
         return;
       }
 
       try {
-        const data = await dashboardService.getMetrics();
+        const { data, latencyMs: measuredLatency } = await dashboardService.getMetricsWithLatency();
         if (data) {
           setMetrics(data);
           setStatus('Connected to AEGIS API');
+          setLatencyMs(measuredLatency);
         } else {
           setStatus('API reachable but returned no data');
         }
       } catch (err) {
         setStatus('Connection failed. Verify API on port 8000.');
+        setLatencyMs(null);
       }
     };
 
@@ -42,7 +46,9 @@ const BackendTest = () => {
         </div>
         <div className="text-right">
           <p className="text-xs text-slate-400">Latency</p>
-          <p className="text-2xl font-semibold text-cyan-300">142ms</p>
+          <p className="text-2xl font-semibold text-cyan-300">
+            {latencyMs ? `${latencyMs}ms` : '--'}
+          </p>
         </div>
       </div>
       
