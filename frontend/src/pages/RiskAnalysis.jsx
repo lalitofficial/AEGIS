@@ -31,19 +31,19 @@ const RiskAnalysis = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
           <p className="text-slate-400 text-sm mb-1">Total Risk Factors</p>
           <p className="text-3xl font-bold text-white">{totalRiskFactors}</p>
         </div>
-        <div className="bg-slate-800 rounded-lg p-6 border border-red-500/20">
+        <div className="aegis-panel rounded-2xl p-6 border border-red-500/20">
           <p className="text-slate-400 text-sm mb-1">High-Risk Customers</p>
           <p className="text-3xl font-bold text-red-400">8</p>
         </div>
-        <div className="bg-slate-800 rounded-lg p-6 border border-orange-500/20">
+        <div className="aegis-panel rounded-2xl p-6 border border-orange-500/20">
           <p className="text-slate-400 text-sm mb-1">High-Risk Merchants</p>
           <p className="text-3xl font-bold text-orange-400">23</p>
         </div>
-        <div className="bg-slate-800 rounded-lg p-6 border border-yellow-500/20">
+        <div className="aegis-panel rounded-2xl p-6 border border-yellow-500/20">
           <p className="text-slate-400 text-sm mb-1">Compromised Accounts</p>
           <p className="text-3xl font-bold text-yellow-400">45</p>
         </div>
@@ -52,7 +52,7 @@ const RiskAnalysis = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie Chart */}
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
           <h3 className="text-lg font-semibold text-white mb-4">Risk Factor Distribution</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -83,7 +83,7 @@ const RiskAnalysis = () => {
         </div>
 
         {/* Bar Chart */}
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
           <h3 className="text-lg font-semibold text-white mb-4">Risk Factors by Category</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={riskFactorsData}>
@@ -105,8 +105,8 @@ const RiskAnalysis = () => {
       </div>
 
       {/* High-Risk Customers Table */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-        <div className="p-6 border-b border-slate-700">
+      <div className="aegis-panel rounded-2xl border border-slate-800/70 overflow-hidden">
+        <div className="p-6 border-b border-slate-800/70">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <Users className="w-5 h-5 text-red-400" />
             High-Risk Customer Details
@@ -114,7 +114,7 @@ const RiskAnalysis = () => {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-700/50">
+            <thead className="bg-slate-900/60">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Customer</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Customer ID</th>
@@ -132,7 +132,7 @@ const RiskAnalysis = () => {
                     <span className="text-slate-200 font-medium">{customer.name}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-cyan-400 font-mono text-sm">{customer.customerId}</span>
+                    <span className="text-cyan-400 aegis-mono text-sm">{customer.customerId}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
@@ -183,7 +183,7 @@ const RiskAnalysis = () => {
       </div>
 
       {/* Risk Mitigation Actions */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+      <div className="aegis-panel rounded-2xl p-6 border border-slate-800/70">
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Shield className="w-5 h-5 text-cyan-400" />
           Recommended Actions
