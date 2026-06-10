@@ -1,7 +1,10 @@
 name: Build and Push Docker Images
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
     branches:
       - main
   workflow_dispatch:
@@ -13,6 +16,8 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    # Publish only when CI on main is green (or on manual dispatch).
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,6 +37,8 @@ jobs:
           context: .
           file: api/Dockerfile
           push: true
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/aegis-api:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/aegis-api:${{ github.sha }}
@@ -42,6 +49,8 @@ jobs:
           context: frontend
           file: frontend/Dockerfile
           push: true
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/aegis-frontend:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/aegis-frontend:${{ github.sha }}
