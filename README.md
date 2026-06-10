@@ -9,6 +9,11 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/lalitofficial/AEGIS/actions/workflows/ci.yml"><img src="https://github.com/lalitofficial/AEGIS/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License" /></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/FastAPI-005571?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
   <img src="https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white" alt="Nginx" />
   <img src="https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React" />
@@ -36,7 +41,9 @@ AEGIS combines real-time transaction analysis, risk scoring, and graph-based ano
 - Getting started
 - Configuration
 - API surface
+- Testing and quality
 - Docker and deployment
+- Contributing, security, and license
 
 ## Overview
 AEGIS is a full-stack fraud detection platform with a FastAPI backend and a React-based analyst experience. It blends ML scoring, graph intelligence, and alert workflows to provide a clear, explainable picture of risk across accounts and transactions.
@@ -75,8 +82,8 @@ flowchart LR
 ```
 
 ## Repo structure
-- `api/`: FastAPI API, ML models, database layer, and tests.
-- `frontend/`: React/Vite frontend for dashboards and monitoring.
+- `api/`: FastAPI API, ML models, database layer, and tests — see [api/README.md](api/README.md).
+- `frontend/`: React/Vite frontend for dashboards and monitoring — see [frontend/README.md](frontend/README.md).
 
 ## Getting started
 ### Requirements
@@ -89,7 +96,7 @@ flowchart LR
 1. `cd api`
 2. `cp .env.example .env`
 3. `python -m venv .venv && source .venv/bin/activate`
-4. `pip install -r ../requirements.txt`
+4. `pip install -r requirements-dev.txt`
 5. `uvicorn app.main:app --reload`
 
 #### Frontend
@@ -121,6 +128,11 @@ flowchart LR
 - `GET /api/v1/accounts/monitored`
 - `GET /api/v1/compliance/frameworks`
 
+## Testing and quality
+- Backend: `pytest` (runs against a throwaway SQLite database), `ruff check .`, `ruff format --check .` — all from `api/`.
+- Frontend: `npm run lint`, `npm test` (Vitest), `npm run build` — all from `frontend/`.
+- CI (`.github/workflows/ci.yml`) runs the same checks on every push and pull request; Docker images are published only after CI passes on `main`.
+
 ## Docker and deployment
 - Dev uses `docker-compose.dev.yml` overrides (bind mounts, hot reload, Vite dev server).
 - Prod uses `docker-compose.yml` or `docker-compose.prod.yml` (immutable images + Nginx).
@@ -150,8 +162,14 @@ Required secrets:
 - `DOCKERHUB_TOKEN` (a Docker Hub access token)
 
 ## Roadmap
-- Model retraining pipeline with scheduled evaluations and drift alerts
-- Role-based access control (RBAC) and audit trails for investigations
+- Model training pipeline with real datasets, scheduled evaluations, and drift alerts (the bundled fraud detector currently falls back to an untrained placeholder model when no artifact exists in `MODEL_PATH`)
+- Rate limiting and per-client API key management
+- Redis-backed caching (currently in-memory per process)
 - Streaming ingest (Kafka/PubSub) for near-real-time decisioning
 - Pluggable rules engine for policy-based overrides
 - Analyst case timeline with evidence attachments and notes
+
+## Contributing, security, and license
+- Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for setup, conventions, and the PR checklist.
+- To report a vulnerability, see [SECURITY.md](SECURITY.md). Please do not open public issues for security reports.
+- Licensed under the [MIT License](LICENSE).

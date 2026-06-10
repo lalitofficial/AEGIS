@@ -1,18 +1,56 @@
-# React + Vite
+# AEGIS Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React analyst dashboard for the AEGIS fraud detection platform: live KPIs, fraud alerts, risk analysis, compliance posture, and an interactive fraud-ring graph.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 18** + **Vite 5**, **React Router** for navigation
+- **Tailwind CSS** with a custom cyber theme, **lucide-react** icons
+- **Recharts** for charts, **vis-network** for graph visualization
+- **Axios** API client, **Vitest** + Testing Library, **ESLint**
 
-## React Compiler
+## Getting started
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev          # http://localhost:3000 (proxies /api to :8000)
+```
 
-Note: This will impact Vite dev & build performances.
+## Scripts
 
-## Expanding the ESLint configuration
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Vite dev server with API proxy to `http://localhost:8000` |
+| `npm run build` | Production build into `dist/` |
+| `npm run preview` | Preview the production build |
+| `npm run lint` | ESLint over the project |
+| `npm test` | Vitest unit tests |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Environment variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VITE_API_URL` | `/api/v1` | API base URL (the dev server and nginx both proxy `/api`) |
+| `VITE_API_KEY` | — | Must match the backend `API_KEY`; sent as `X-API-Key` |
+
+## Presentation mode
+
+The sidebar has a presentation toggle that switches every page to bundled demo data (`src/data/mockData.js`) so the UI can be shown without a running backend. The setting persists in `localStorage` and pages react to it live via the `usePresentationMode` hook (`src/utils/presentationMode.js`).
+
+## Theming
+
+`src/utils/uiSettings.js` persists UI preferences (accent color, panel opacity, glow, radius, background grid/orbs, reduced motion) to `localStorage` and applies them as CSS variables. The settings panel is reachable from the header.
+
+## Layout
+
+```
+src/
+├── pages/         # Dashboard, FraudAlerts, RiskAnalysis, Compliance, ...
+├── components/    # Header, Sidebar, MetricCard, GraphView, ...
+├── services/      # Axios API client (api.js)
+├── data/          # Demo datasets for presentation mode
+├── utils/         # presentationMode, uiSettings
+└── test/          # Vitest setup and unit tests
+```
