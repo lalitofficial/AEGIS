@@ -27,7 +27,7 @@ const BackendTest = () => {
         } else {
           setStatus('API reachable but returned no data');
         }
-      } catch (err) {
+      } catch {
         setStatus('Connection failed. Verify API on port 8000.');
         setLatencyMs(null);
       }

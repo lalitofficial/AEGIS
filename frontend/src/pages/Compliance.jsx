@@ -5,34 +5,35 @@ import { complianceService } from '../services/api';
 import { complianceFrameworks as mockFrameworks } from '../data/mockData';
 import { usePresentationMode } from '../utils/presentationMode';
 
+const mockActivities = [
+  {
+    id: 1,
+    activity: 'KYC Documentation Completed',
+    description: 'All new customer verifications processed - Dec 1, 2024',
+    status: 'completed',
+    date: '2024-12-01',
+  },
+  {
+    id: 2,
+    activity: 'AML Transaction Monitoring Active',
+    description: 'Suspicious activity reports filed for Nov 2024',
+    status: 'completed',
+    date: '2024-11-28',
+  },
+  {
+    id: 3,
+    activity: 'SOX Audit Review Required',
+    description: 'Financial controls need quarterly assessment',
+    status: 'pending',
+    date: '2024-11-20',
+  },
+];
+
 const Compliance = () => {
   const [presentationMode] = usePresentationMode();
   const [frameworks, setFrameworks] = useState([]);
   const [activities, setActivities] = useState([]);
 
-  const mockActivities = [
-    {
-      id: 1,
-      activity: 'KYC Documentation Completed',
-      description: 'All new customer verifications processed - Dec 1, 2024',
-      status: 'completed',
-      date: '2024-12-01',
-    },
-    {
-      id: 2,
-      activity: 'AML Transaction Monitoring Active',
-      description: 'Suspicious activity reports filed for Nov 2024',
-      status: 'completed',
-      date: '2024-11-28',
-    },
-    {
-      id: 3,
-      activity: 'SOX Audit Review Required',
-      description: 'Financial controls need quarterly assessment',
-      status: 'pending',
-      date: '2024-11-20',
-    },
-  ];
 
   useEffect(() => {
     let isMounted = true;

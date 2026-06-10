@@ -74,7 +74,7 @@ const readSettings = () => {
   }
   try {
     return { ...defaultSettings, ...JSON.parse(stored) };
-  } catch (error) {
+  } catch {
     return defaultSettings;
   }
 };

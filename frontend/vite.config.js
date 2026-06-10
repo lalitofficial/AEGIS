@@ -11,5 +11,23 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-  }
+  },
+  build: {
+    // vis-network is a single 650 kB library; it gets its own chunk below
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          charts: ['recharts'],
+          graph: ['vis-network/standalone'],
+        },
+      },
+    },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setup.js',
+  },
 })

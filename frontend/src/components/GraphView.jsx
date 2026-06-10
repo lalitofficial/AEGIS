@@ -40,9 +40,11 @@ const GraphView = () => {
         const nodes = graphData?.nodes || [];
         const edges = graphData?.edges || [];
         if (!nodes.length) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state mirrors the imperative vis-network lifecycle
             setIsLoading(false);
             return;
         }
+         
         setIsLoading(true);
 
         const data = {

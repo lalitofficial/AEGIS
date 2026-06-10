@@ -105,6 +105,7 @@ const Dashboard = () => {
     }
     const latest = recentAlerts[0];
     if (latest.created_at) {
+      // eslint-disable-next-line react-hooks/purity -- elapsed-time display, refreshed whenever alerts reload
       const deltaMs = Date.now() - new Date(latest.created_at).getTime();
       if (!Number.isNaN(deltaMs)) {
         return Math.max(1, Math.round(deltaMs / 60000));
@@ -292,7 +293,7 @@ const Dashboard = () => {
       }
       setBriefCopied(true);
       setTimeout(() => setBriefCopied(false), 1600);
-    } catch (error) {
+    } catch {
       setBriefCopied(false);
     }
   };
