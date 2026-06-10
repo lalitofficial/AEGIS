@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   api:
     volumes:
@@ -8,7 +6,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/aegis_db
       DATABASE_ECHO: "False"
-      SECRET_KEY: change-me
+      SECRET_KEY: dev-secret
       API_KEY: dev-key
       LOG_LEVEL: INFO
 
@@ -18,7 +16,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    ports:
+    ports: !override
       - "3000:3000"
     environment:
       VITE_API_KEY: dev-key

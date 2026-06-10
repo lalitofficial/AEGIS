@@ -1,34 +1,40 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: aegis_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-aegis_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      # Required in production; do not rely on a default here.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-aegis_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api:
     image: ${DOCKERHUB_USERNAME}/aegis-api:${IMAGE_TAG:-latest}
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/aegis_db
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-aegis_db}
       DATABASE_ECHO: "False"
-      SECRET_KEY: change-me
-      API_KEY: ${API_KEY:-change-me}
-      LOG_LEVEL: INFO
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
+      API_KEY: ${API_KEY:?set API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - "8000:8000"
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     image: ${DOCKERHUB_USERNAME}/aegis-frontend:${IMAGE_TAG:-latest}
     ports:
       - "3000:80"
+    restart: unless-stopped
     depends_on:
       - api
 
