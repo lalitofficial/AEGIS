@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey
-from datetime import datetime
+from sqlalchemy import JSON, Column, DateTime, Integer, String
+
 from app.database import Base
+from app.utils.helpers import utcnow
+
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
@@ -11,4 +13,4 @@ class AuditLog(Base):
     entity_type = Column(String, index=True)
     entity_id = Column(String, index=True)
     details = Column(JSON)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)

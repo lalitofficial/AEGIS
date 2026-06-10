@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime
-from datetime import datetime
+from sqlalchemy import Column, Date, DateTime, Integer, String
+
 from app.database import Base
+from app.utils.helpers import utcnow
+
 
 class ComplianceFramework(Base):
     __tablename__ = "compliance_frameworks"
@@ -11,7 +13,8 @@ class ComplianceFramework(Base):
     status = Column(String)
     last_audit = Column(Date)
     description = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+
 
 class ComplianceActivity(Base):
     __tablename__ = "compliance_activities"
@@ -21,7 +24,8 @@ class ComplianceActivity(Base):
     description = Column(String)
     status = Column(String)
     date = Column(Date)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+
 
 class DetectionPosture(Base):
     __tablename__ = "detection_posture"
@@ -29,4 +33,4 @@ class DetectionPosture(Base):
     id = Column(Integer, primary_key=True, index=True)
     category = Column(String, unique=True, index=True)
     score = Column(Integer)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)

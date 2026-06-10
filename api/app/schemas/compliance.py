@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from datetime import date
+
+from pydantic import BaseModel, ConfigDict
+
 
 class ComplianceFrameworkResponse(BaseModel):
     id: int
@@ -9,8 +11,8 @@ class ComplianceFrameworkResponse(BaseModel):
     last_audit: date
     description: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ComplianceActivityResponse(BaseModel):
     id: int
@@ -19,13 +21,12 @@ class ComplianceActivityResponse(BaseModel):
     status: str
     date: date
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class DetectionPostureResponse(BaseModel):
     id: int
     category: str
     score: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

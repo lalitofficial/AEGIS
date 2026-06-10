@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class TransactionBase(BaseModel):
     transaction_id: str
@@ -8,21 +10,22 @@ class TransactionBase(BaseModel):
     amount: float = Field(gt=0)
     currency: str = "INR"
     merchant_id: str
-    merchant_category: Optional[str] = None
+    merchant_category: str | None = None
     payment_method: str
-    ip_address: Optional[str] = None
-    device_id: Optional[str] = None
+    ip_address: str | None = None
+    device_id: str | None = None
+
 
 class TransactionCreate(TransactionBase):
-    location: Optional[Dict[str, Any]] = None
-    features: Optional[Dict[str, Any]] = None
+    location: dict[str, Any] | None = None
+    features: dict[str, Any] | None = None
+
 
 class TransactionResponse(TransactionBase):
     id: int
     status: str
-    fraud_probability: Optional[float] = None
+    fraud_probability: float | None = None
     timestamp: datetime
     created_at: datetime
-    
-    class Config:
-        from_attributes = True
+
+    model_config = ConfigDict(from_attributes=True)

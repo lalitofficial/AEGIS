@@ -1,27 +1,36 @@
-from datetime import datetime, timedelta
-from typing import Optional, List
+from datetime import UTC, datetime, timedelta
+
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from passlib.context import CryptContext
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+
 from app.config import settings
 from app.database import get_db
 from app.models.user import User
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except ValueError:
+        return False
+
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
-def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+
+def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
+    expire = datetime.now(UTC) + (
+        expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     to_encode = {"sub": subject, "exp": expire}
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -45,7 +54,8 @@ def get_current_user(
         raise credentials_exception
     return user
 
-def require_roles(roles: List[str]):
+
+def require_roles(roles: list[str]):
     def checker(user: User = Depends(get_current_user)) -> User:
         if user.role not in roles and not user.is_superuser:
             raise HTTPException(
@@ -53,4 +63,5 @@ def require_roles(roles: List[str]):
                 detail="Insufficient permissions",
             )
         return user
+
     return checker

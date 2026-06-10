@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
-from app.api.routes import fraud, dashboard, compliance, accounts, auth, risk, graph
+
+from app.api.routes import accounts, auth, compliance, dashboard, fraud, graph, risk
 from app.utils.auth import verify_api_key
 
 api_router = APIRouter(dependencies=[Depends(verify_api_key)])
