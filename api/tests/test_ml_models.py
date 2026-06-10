@@ -1,5 +1,6 @@
 from app.ml_models.risk_scorer import RiskScorer
 
+
 def test_risk_scorer_handles_string_account_age():
     scorer = RiskScorer()
     data = {
@@ -8,6 +9,7 @@ def test_risk_scorer_handles_string_account_age():
     }
     score = scorer.calculate_risk_score(data)
     assert 0 <= score <= 100
+
 
 def test_risk_scorer_flags_new_account():
     scorer = RiskScorer()
