@@ -23,6 +23,12 @@ rings:
 gnn:
 	$(PY) -m packages.models.graph.train --data data/generated/dev
 
+anomaly:
+	$(PY) -m packages.models.anomaly.detectors --data data/generated/dev
+
+ssl:
+	$(PY) -m packages.models.graph.ssl --data data/generated/dev
+
 lint:
 	$(RUFF) check data packages
 	$(RUFF) format --check data packages
