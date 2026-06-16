@@ -104,7 +104,9 @@ class Simulator:
         txns["is_fraud"] = txns["is_fraud"].astype("int8")
         txns["mcc"] = txns["mcc"].astype("int64")
 
-        # Ground-truth ring membership (entity, ring) for graph evaluation later.
+        # Ground-truth ring membership: the *criminal core* (mule/recruited
+        # accounts), excluding the legit sources that merely pay into a mule, so
+        # ring discovery is scored against the colluding set rather than victims.
         rm = txns.loc[txns["ring_id"].notna(), ["src_account_id", "dst_account_id", "ring_id"]]
         members = (
             pd.concat(
@@ -119,8 +121,8 @@ class Simulator:
             )
             .dropna()
             .drop_duplicates()
-            .reset_index(drop=True)
         )
+        members = members[members["account_id"].isin(ctx.mule_ids)].reset_index(drop=True)
 
         n_fraud = int(txns["is_fraud"].sum())
         manifest = {

@@ -17,6 +17,18 @@ Full design: [DESIGN.md](DESIGN.md). This tracks what is built vs. planned.
   LightGBM evaluated on a **leakage-free out-of-time split**, reporting PR-AUC,
   recall@1% FPR, and per-typology recall.
 
+## Built (Phase 6–7: graph)
+- **Point-in-time graph features** (`packages/features/graph.py`): running, as-of
+  money-flow signals (in/out degree, flow-through ratio, distinct counterparties)
+  + windowed burst signals (fan-in over 24h/7d) + identity signals (shared-device
+  customer count). Computed without a per-row graph rebuild; no future leakage.
+- **Ablation runner** (`evaluation/ablation.py`): tabular vs tabular+graph.
+- **Ring discovery** (`packages/graphdb/analytics.py`): networkx money-flow graph,
+  reciprocal/repeated-edge subgraph + Louvain communities, scored (coverage) vs
+  ground-truth ring membership.
+- **Neo4j export** (`packages/graphdb/neo4j_export.py`): CSVs + `load.cypher`
+  (constraints, LOAD CSV, GDS Louvain projection) for the graph-DB story.
+
 ## Quickstart
 ```bash
 python -m venv .venv && source .venv/bin/activate
@@ -43,9 +55,28 @@ graph layer is meant to close:
 | structuring ~0.98 | collusion ~0.16 |
 | card_testing ~0.96 | layering ~0.12 |
 
-> Numbers vary slightly by seed/scale; regenerate with `make data && make baseline`.
+## Ablation: adding graph features (`make ablation`)
+| Config | PR-AUC | Recall@1% FPR |
+|---|---|---|
+| tabular | 0.886 | 0.882 |
+| **tabular + graph** | **0.932** | **0.937** |
+
+Per-typology recall @ 1% FPR — graph features close the gap on the structured typologies:
+
+| typology | tabular | +graph | Δ |
+|---|---|---|---|
+| layering | 0.12 | 0.75 | **+0.62** |
+| collusion | 0.16 | 0.40 | **+0.24** |
+| mule | 0.44 | 0.56 | **+0.11** |
+
+## Ring discovery (`make rings`)
+Community detection on the money-flow graph recovers dense **collusion** rings
+(2/3, mean coverage 0.57) but is blind to **mule** fan-in (0/5) where criminal
+accounts are embedded in legit activity — motivating the inductive GNN (next).
+
+> Numbers vary slightly by seed/scale; regenerate with `make data && make ablation`.
 
 ## Next (per DESIGN.md roadmap)
-Streaming features (Kafka/Bytewax/Redis) → graph construction (Neo4j/GDS) →
-inductive GNN embeddings (GraphSAGE/GAT) → self-supervised + anomaly → fusion +
+Inductive GNN embeddings (GraphSAGE/GAT) → self-supervised + anomaly → fusion +
 calibration → case prioritization + explainability → MLOps/observability.
+(Streaming/serving infra is deferred — it needs a running Kafka/Redis stack.)

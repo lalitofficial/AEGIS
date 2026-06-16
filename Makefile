@@ -14,6 +14,12 @@ data:
 baseline:
 	$(PY) -m packages.models.tabular.baseline --data data/generated/dev
 
+ablation:
+	$(PY) -m evaluation.ablation --data data/generated/dev
+
+rings:
+	$(PY) -m packages.graphdb.analytics --data data/generated/dev
+
 lint:
 	$(RUFF) check data packages
 	$(RUFF) format --check data packages
