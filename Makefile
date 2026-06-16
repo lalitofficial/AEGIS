@@ -20,6 +20,9 @@ ablation:
 rings:
 	$(PY) -m packages.graphdb.analytics --data data/generated/dev
 
+gnn:
+	$(PY) -m packages.models.graph.train --data data/generated/dev
+
 lint:
 	$(RUFF) check data packages
 	$(RUFF) format --check data packages

@@ -72,11 +72,28 @@ Per-typology recall @ 1% FPR — graph features close the gap on the structured 
 ## Ring discovery (`make rings`)
 Community detection on the money-flow graph recovers dense **collusion** rings
 (2/3, mean coverage 0.57) but is blind to **mule** fan-in (0/5) where criminal
-accounts are embedded in legit activity — motivating the inductive GNN (next).
+accounts are embedded in legit activity — motivating the inductive GNN.
 
-> Numbers vary slightly by seed/scale; regenerate with `make data && make ablation`.
+## Built (Phase 8–9: GNN) — `make gnn`
+- **GraphSAGE** (`packages/models/graph/`, PyTorch Geometric) for criminal-account
+  detection (mule/recruited + synthetic-owned) on the **heterogeneous entity
+  graph** (denoised reciprocal/repeated money-flow edges + shared-device/IP
+  identity edges). Max-aggregation propagates risk through homophilous clusters.
+- **MLP control** with identical node features isolates the value of message
+  passing. Exports node embeddings (`account_embeddings.parquet`) for fusion.
+
+| model | PR-AUC | ROC-AUC | Recall@5% FPR |
+|---|---|---|---|
+| MLP (features only) | 0.52 | 0.79 | 0.49 |
+| **GraphSAGE (message passing)** | **0.58** | 0.80 | **0.51** |
+
+**Message passing lifts PR-AUC ~+0.06** — the relational signal classical
+community detection couldn't exploit for mules. (Setup: transductive node split;
+inductive/temporal splits are a documented next refinement.)
+
+> Numbers vary slightly by seed/scale; regenerate with `make data && make ablation && make gnn`.
 
 ## Next (per DESIGN.md roadmap)
-Inductive GNN embeddings (GraphSAGE/GAT) → self-supervised + anomaly → fusion +
-calibration → case prioritization + explainability → MLOps/observability.
-(Streaming/serving infra is deferred — it needs a running Kafka/Redis stack.)
+Self-supervised pretraining + anomaly detectors → fusion & calibration (combine
+tabular + graph features + GNN embeddings) → case prioritization + explainability
+→ MLOps/observability. (Streaming/serving infra deferred — needs a Kafka/Redis stack.)
