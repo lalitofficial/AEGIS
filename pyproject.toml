@@ -1,0 +1,15 @@
+# Tooling config for the AEGIS ML platform packages (data/, packages/, services/,
+# pipelines/, evaluation/). The legacy case-management API keeps its own config
+# under api/pyproject.toml.
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["api", ".venv", "data/generated"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "packages", "data"]
+addopts = "-q"

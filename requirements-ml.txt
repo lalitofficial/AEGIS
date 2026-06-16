@@ -1,0 +1,13 @@
+# AEGIS ML platform — Phase 1/2 (simulator + tabular baseline).
+# Graph (torch-geometric), MLOps (mlflow/optuna), and streaming deps are added
+# in their respective phases.
+numpy==2.4.0
+pandas==2.3.3
+pyarrow==24.0.0
+scikit-learn==1.8.0
+lightgbm==4.6.0
+networkx==3.6.1
+
+# dev
+pytest==8.4.2
+ruff==0.14.5

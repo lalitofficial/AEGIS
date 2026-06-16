@@ -7,6 +7,7 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 .venv/
 venv/
 env/
@@ -14,6 +15,13 @@ env/
 .env.*
 !.env.example
 *.db
+
+# ML platform artifacts (regenerated locally)
+data/generated/
+mlflow/
+mlruns/
+evaluation/*.json
+*.parquet
 
 # Logs
 logs/
