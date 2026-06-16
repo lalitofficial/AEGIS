@@ -56,8 +56,8 @@ def _autoencoder_scores(x: np.ndarray, epochs: int = 200) -> np.ndarray:
     return err
 
 
-def score_accounts(data_dir: str):
-    g = build_account_graph(data_dir)
+def score_accounts(data_dir: str, until_ts=None):
+    g = build_account_graph(data_dir, until_ts=until_ts)
     x = _standardize(g.x)
 
     iforest = IsolationForest(n_estimators=200, contamination="auto", random_state=7)

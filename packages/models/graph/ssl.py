@@ -29,9 +29,9 @@ def _standardize(x: np.ndarray) -> np.ndarray:
     return (x - x.mean(axis=0)) / (x.std(axis=0) + 1e-6)
 
 
-def train_ssl(data_dir: str, epochs: int = 250, batch: int = 2048):
+def train_ssl(data_dir: str, epochs: int = 250, batch: int = 2048, until_ts=None):
     torch.manual_seed(7)
-    g = build_account_graph(data_dir)
+    g = build_account_graph(data_dir, until_ts=until_ts)
     x = torch.tensor(_standardize(g.x))
     ei = torch.tensor(g.edge_index)
     n_nodes, n_edges = len(g.nodes), ei.shape[1]

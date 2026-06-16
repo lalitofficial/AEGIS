@@ -91,9 +91,40 @@ accounts are embedded in legit activity — motivating the inductive GNN.
 community detection couldn't exploit for mules. (Setup: transductive node split;
 inductive/temporal splits are a documented next refinement.)
 
-> Numbers vary slightly by seed/scale; regenerate with `make data && make ablation && make gnn`.
+## Built (Phase 10: self-supervised + anomaly)
+- **Anomaly** (`packages/models/anomaly/`, `make anomaly`): Isolation Forest +
+  autoencoder score accounts with **no labels**. IF reaches PR-AUC ~0.47 vs a
+  ~5.7% base rate (~8×); the autoencoder is weak (~0.08) because recruited mules
+  look individually normal — unsupervised methods catch odd/cold-start cases but
+  miss deliberately-normal organized crime.
+- **Self-supervised + few-shot** (`packages/models/graph/ssl.py`, `make ssl`): a
+  GraphSAGE encoder trained by **link prediction** (no labels), then few-shot
+  detection — given **10 known criminals**, rank all accounts by embedding
+  similarity. SSL embeddings hit PR-AUC **~0.36 vs ~0.18** for raw-feature kNN
+  (**+0.18**) — metric learning / few-shot demonstrated.
+
+## Built (Phase 11: fusion + calibration + cases) — `make fusion`
+Decision pipeline on a train/calibration/test out-of-time split:
+- **Capstone ablation** (honest negative result included):
+
+  | config | PR-AUC | Recall@1% FPR |
+  |---|---|---|
+  | tabular | 0.88 | 0.87 |
+  | **tabular + graph** (production) | **0.92** | **0.93** |
+  | + static GNN emb + anomaly | 0.79 | 0.86 |
+
+  Static, as-of-cutoff entity embeddings **hurt** the per-transaction model
+  (stale for out-of-time rows, noisy); the GNN/SSL deliver value at the **entity
+  level** instead. Per-row temporal embeddings (TGN) are the proper fusion path.
+- **Calibration** (isotonic on a held-out window): ECE **0.0016 → 0.0006**, so
+  P(fraud) is trustworthy for expected-value decisions.
+- **EV case prioritization**: rank by P×amount, dedup to entity-level cases —
+  **~58% alert-volume reduction** (785 txn alerts → 326 cases), **precision@top-20
+  EV ≈ 0.90**, ~76% fraud-account recall.
+
+> Numbers vary slightly by seed/scale; regenerate with `make data ablation gnn ssl anomaly fusion`.
 
 ## Next (per DESIGN.md roadmap)
-Self-supervised pretraining + anomaly detectors → fusion & calibration (combine
-tabular + graph features + GNN embeddings) → case prioritization + explainability
-→ MLOps/observability. (Streaming/serving infra deferred — needs a Kafka/Redis stack.)
+Explainability (SHAP / counterfactual / GNNExplainer case narratives) →
+MLOps/observability (MLflow registry, retraining, drift). Streaming/serving infra
+(Kafka/Bytewax/Redis) and inductive/temporal GNN (TGN) remain documented refinements.

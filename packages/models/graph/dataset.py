@@ -83,11 +83,16 @@ def _identity_edges(txns: pd.DataFrame, idx: dict[str, int], max_clique: int = 1
     return edges
 
 
-def build_account_graph(data_dir: str) -> GraphData:
+def build_account_graph(data_dir: str, until_ts=None) -> GraphData:
     data = Path(data_dir)
     txns = pd.read_parquet(data / "transactions.parquet")
     accounts = pd.read_parquet(data / "accounts.parquet")
     customers = pd.read_parquet(data / "customers.parquet")
+
+    # Point-in-time cutoff: build entity features/embeddings from history only,
+    # so they can be used as features for later transactions without leakage.
+    if until_ts is not None:
+        txns = txns[txns["ts"] <= until_ts]
 
     tr = txns[txns["dst_account_id"].notna()]
     nodes = sorted(set(txns["src_account_id"]) | set(tr["dst_account_id"].dropna()))

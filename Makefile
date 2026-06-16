@@ -29,6 +29,9 @@ anomaly:
 ssl:
 	$(PY) -m packages.models.graph.ssl --data data/generated/dev
 
+fusion:
+	$(PY) -m packages.models.fusion.fuse --data data/generated/dev
+
 lint:
 	$(RUFF) check data packages
 	$(RUFF) format --check data packages
